@@ -70,7 +70,7 @@ bool PRISMWrapper::runPrism(const char* pctl) {
 	if (pid == 0) {
 
 		// create args vector
-		std::vector<const char*> argv = { PRISM, modelPath, "-pctl", pctl,
+		std::vector<const char*> argv = { PRISM, modelPath, "-pctl", pctl, "-cuddmaxmem", "4g",
 			                          "-exportadv", adversaryPath, "-exportstates", statesPath,
 			                          "-exportlabels", labelsPath };
 		for (const auto& opt : prismOptions) {
