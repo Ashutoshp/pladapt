@@ -162,13 +162,13 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 
 	/* create forward-looking sensors */
 	EnvironmentMonitor envThreatMonitor(
-					unique_ptr<Sensor>(
-							new Sensor(params.longRangeSensor.THREAT_SENSOR_FPR,
-									params.longRangeSensor.THREAT_SENSOR_FNR)));
+			unique_ptr<Sensor>(
+					new Sensor(params.longRangeSensor.THREAT_SENSOR_FPR,
+							params.longRangeSensor.THREAT_SENSOR_FNR)));
 	EnvironmentMonitor envTargetMonitor(
-					unique_ptr<Sensor>(
-							new Sensor(params.longRangeSensor.TARGET_SENSOR_FPR,
-									params.longRangeSensor.TARGET_SENSOR_FNR)));
+			unique_ptr<Sensor>(
+					new Sensor(params.longRangeSensor.TARGET_SENSOR_FPR,
+							params.longRangeSensor.TARGET_SENSOR_FNR)));
 
 
 	/* prepare sim display */
@@ -196,7 +196,7 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 
 	Stats decisionTimeStats;
 
-  int numQuickDecisions = 0;
+	int numQuickDecisions = 0;
 
 	/* initialize platform */
 	DartConfiguration currentConfig(params.configurationSpace.ALTITUDE_LEVELS - 1, DartConfiguration::Formation::LOOSE, 0, 0, 0, 0, 0);
@@ -208,7 +208,7 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 
 	/* sim loop */
 	Coordinate position;
-  int timestep =  0;
+	int timestep =  0;
 	auto routeIt = route.begin();
 	while (routeIt != route.end()) {
 		position = *routeIt;
@@ -242,40 +242,40 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 		monitoringInfo.ttcDecAlt2 = currentConfig.getTtcDecAlt2() * params.adaptationManager.adaptationPeriod;
 		monitoringInfo.ecm = currentConfig.getEcm();
 
-    monitoringInfo.timestep = timestep;
+		monitoringInfo.timestep = timestep;
 
 		/* monitor environment */
 		Route senseRoute(position, monitoringInfo.directionX, monitoringInfo.directionY, params.adaptationManager.HORIZON);
 
-    if(!params.adaptationManager.accumulateObservations){
-      envThreatMonitor.clear();
-      envTargetMonitor.clear();
-    }
+		if(!params.adaptationManager.accumulateObservations){
+			envThreatMonitor.clear();
+			envTargetMonitor.clear();
+		}
 
-    envThreatMonitor.sense(threatEnv, params.longRangeSensor.THREAT_OBSERVATIONS_PER_CYCLE, senseRoute);
+		envThreatMonitor.sense(threatEnv, params.longRangeSensor.THREAT_OBSERVATIONS_PER_CYCLE, senseRoute);
 		envTargetMonitor.sense(targetEnv, params.longRangeSensor.TARGET_OBSERVATIONS_PER_CYCLE, senseRoute);
 		monitoringInfo.threatSensing = envThreatMonitor.getResults(senseRoute);
-    //		cout << "sensed threats:";
-    //		for (const auto& r : monitoringInfo.threatSensing) {
-    //			cout << " (" <<  r.cellPosition << ' ' << r.detections << '/' << r.observations << ')';
-    //		}
-    //		cout << endl;
+		//		cout << "sensed threats:";
+		//		for (const auto& r : monitoringInfo.threatSensing) {
+		//			cout << " (" <<  r.cellPosition << ' ' << r.detections << '/' << r.observations << ')';
+		//		}
+		//		cout << endl;
 		monitoringInfo.targetSensing = envTargetMonitor.getResults(senseRoute);
 
 
 		TacticList tactics;
 		if (!simParams.optimalityTest || (simParams.optimalityTest && !gotStrategy)) {
-
 			/* invoke adaptation manager */
 			auto startTime = myclock::now();
 			tactics = adaptMgr.decideAdaptation(monitoringInfo);
 			auto delta = myclock::now() - startTime;
 			double deltaMsec = chrono::duration_cast<chrono::duration<double, std::milli>>(delta).count();
-      if(deltaMsec > 2.0f){
-        decisionTimeStats(deltaMsec);
-      } else {
-        numQuickDecisions++;
-      }
+
+			if(deltaMsec > 2.0f){
+				decisionTimeStats(deltaMsec);
+			} else {
+				numQuickDecisions++;
+			}
 
 			if (simParams.optimalityTest) {
 				gotStrategy = true;
@@ -297,18 +297,19 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 		 */
 		for (auto tactic : tactics) {
 			currentConfig = executeTactic(tactic, currentConfig, params.tactics,
-			                              params.adaptationManager, params.configurationSpace);
+					params.adaptationManager, params.configurationSpace);
 		}
 
 		/* update display */
 		screen[screenPosition][currentConfig.getAltitudeLevel()] =
 				(currentConfig.getFormation()
 						== DartConfiguration::Formation::LOOSE) ?
-						(currentConfig.getEcm() ? '@' : '#') :
-						(currentConfig.getEcm() ? '0' : '*');
+								(currentConfig.getEcm() ? '@' : '#') :
+								(currentConfig.getEcm() ? '0' : '*');
 
 		/* simulate threats */
 		destroyed = pThreatSim->isDestroyed(threatEnv, currentConfig, position);
+
 		if (destroyed) {
 			cout << "Team destroyed at position " << position << endl;
 			break;
@@ -318,11 +319,11 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 		if (pTargetSensor->sense(currentConfig, targetEnv.isObjectAt(position))) {
 			cout << "Target detected at " << position << endl;
 			targetsDetected++;
-      currentConfig.setTargetDetected(true);
+			currentConfig.setTargetDetected(true);
 			screen[screenPosition][SCREEN_TARGETS] = 'X';
 		} else {
-      currentConfig.setTargetDetected(false);
-    }
+			currentConfig.setTargetDetected(false);
+		}
 
 		/* system evolution */
 		// route position already advanced before
@@ -360,20 +361,20 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 				currentConfig.setAltitudeLevel(currentConfig.getAltitudeLevel() - 2);
 			}
 		}
-    for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h > 0; h--) {
-      cout << h-1;
-  		for (unsigned p = 0; p < pathLength; p++) {
-  			cout << screen[p][h - 1];
-  		}
-  		cout << endl;
-  	}
-  	for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h < params.configurationSpace.ALTITUDE_LEVELS + 2; h++) {
-      cout << " ";
-      for (unsigned p = 0; p < pathLength; p++) {
-  			cout << screen[p][h];
-  		}
-  		cout << endl;
-  	}
+		for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h > 0; h--) {
+			cout << h-1;
+			for (unsigned p = 0; p < pathLength; p++) {
+				cout << screen[p][h - 1];
+			}
+			cout << endl;
+		}
+		for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h < params.configurationSpace.ALTITUDE_LEVELS + 2; h++) {
+			cout << " ";
+			for (unsigned p = 0; p < pathLength; p++) {
+				cout << screen[p][h];
+			}
+			cout << endl;
+		}
 
 		currentConfig.setTimestep(timestep);
 		timestep++;
@@ -402,7 +403,7 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 	results.missionSuccess = !destroyed && targetsDetected >= simParams.scenario.TARGETS / 2.0;
 	results.decisionTimeAvg = boost::accumulators::mean(decisionTimeStats);
 	results.decisionTimeVar = boost::accumulators::moment<2>(decisionTimeStats);
-  results.numQuickDecisions = numQuickDecisions;
+	results.numQuickDecisions = numQuickDecisions;
 
 	return results;
 }

@@ -54,20 +54,23 @@ const c_MIN=0; const c_MAX=1; const c_INIT=init_c;
 module sys
 	a : [a_MIN..a_MAX] init a_INIT;
 	f : [f_MIN..f_MAX] init f_INIT;
-  c : [c_MIN..c_MAX] init c_INIT;
+    c : [c_MIN..c_MAX] init c_INIT;
 
-  [EcmOn_start] c=0 & ECM_ENABLED -> 1: (c'=c_EcmOn_impact);
-  [EcmOff_start] c=1 & ECM_ENABLED -> 1: (c'=c_EcmOff_impact);
-	[GoTight_start] f=0 -> 1: (a'=a_GoTight_impact)
+    [EcmOn_start] c=0 & ECM_ENABLED -> 1: (c'=c_EcmOn_impact);
+    [EcmOff_start] c=1 & ECM_ENABLED -> 1: (c'=c_EcmOff_impact);
+	
+    [GoTight_start] f=0 -> 1: (a'=a_GoTight_impact)
 		 &  (f'=f_GoTight_impact);
 	[GoLoose_start] f=1 -> 1: (a'=a_GoLoose_impact)
 		 &  (f'=f_GoLoose_impact);
-	[IncAlt_complete] a < MAX_ALT_LEVEL -> 1:  (a'=a_IncAlt_impact)
+	
+    [IncAlt_complete] a < MAX_ALT_LEVEL -> 1:  (a'=a_IncAlt_impact)
 	 	&  (f'=f_IncAlt_impact);
-  [IncAlt2_complete] a < MAX_ALT_LEVEL-1 & TWO_LEVEL_ENABLED -> 1:  (a'=a_IncAlt2_impact);
-	[DecAlt_complete] a > 0 -> 1:  (a'=a_DecAlt_impact)
+    [IncAlt2_complete] a < MAX_ALT_LEVEL-1 & TWO_LEVEL_ENABLED -> 1:  (a'=a_IncAlt2_impact);
+	
+    [DecAlt_complete] a > 0 -> 1:  (a'=a_DecAlt_impact)
 		 &  (f'=f_DecAlt_impact);
-  [DecAlt2_complete] a > 1 & TWO_LEVEL_ENABLED -> 1:  (a'=a_DecAlt2_impact);
+    [DecAlt2_complete] a > 1 & TWO_LEVEL_ENABLED -> 1:  (a'=a_DecAlt2_impact);
 endmodule
 
 
@@ -332,7 +335,7 @@ formula probOfThreat = stateValue;
 
 formula probabilityOfDestruction = probOfThreat
 	* ((f = LOOSE) ? 1.0 : (1.0 / destructionFormationFactor))
-  * ((c = EMC_ON) ? 0.25 : 1.0)
+    * ((c = EMC_ON) ? 0.25 : 1.0)
 		* max(0.0, threatRange - (a + 1)) / threatRange; // +1 because level 0 is one level above ground
 
 module constraint // in this case the constraint is surviving
@@ -347,7 +350,7 @@ formula probOfTarget= stateValue1;
 
 formula probOfDetection = probOfTarget
 	* ((f = LOOSE) ? 1.0 : (1.0 / detectionFormationFactor))
-  * ((c = EMC_ON) ? 0.25 : 1.0)
+    * ((c = EMC_ON) ? 0.25 : 1.0)
 	* max(0.0, sensorRange - (a + 1)) / sensorRange; // +1 because level 0 is one level above ground
 
 module sensor

@@ -65,6 +65,7 @@ struct ConfigurationSpaceParams {
 struct AdaptationManagerParams {
 
 	std::string mgr = "sdpra"; /**< identifier for the adaptation manager to use */
+	std::string hpMode = "";
 
 	/**
 	 * Period for the adaptation decision. It should be the time it takes for

@@ -19,7 +19,6 @@
  * use and distribution.
  ******************************************************************************/
 #include <dartam/HybridAdaptationManager.h>
-#include <dartam/Parameters.h>
 #include <pladapt/Utils.h>
 #include <pladapt/PMCRAAdaptationManager.h>
 #include <iostream>
@@ -42,8 +41,8 @@ HybridAdaptationManager::HybridAdaptationManager() : savedDTMC(0){
 void HybridAdaptationManager::initialize(std::shared_ptr<const pladapt::ConfigurationManager> configMgr, const YAML::Node& params,
                                          std::shared_ptr<const DartPMCHelper> helper) {
 	pConfigMgr = configMgr;
-	pMcHelper = helper;
 	this->params = params;
+	pMcHelper = helper;
 }
 
 pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configuration& currentConfigObj, const pladapt::EnvironmentDTMCPartitioned& envDTMC,
@@ -52,20 +51,18 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 	// QUESTION: Is it possible for the model to be open at this point but not #drew
 	//  be loaded into the PlanDB? If so it needs to be accounted for here
 
-  unsigned adjustedTimestep = (dynamic_cast<const DartConfiguration&>(currentConfigObj)).getTimestep() - planStartTime;
-  DartConfiguration adjustedConfig = DartConfiguration(dynamic_cast<const DartConfiguration&>(currentConfigObj));
-  adjustedConfig.setTimestep(adjustedTimestep);
+    unsigned adjustedTimestep = (dynamic_cast<const DartConfiguration&>(currentConfigObj)).getTimestep() - planStartTime;
+    DartConfiguration adjustedConfig = DartConfiguration(dynamic_cast<const DartConfiguration&>(currentConfigObj));
+    adjustedConfig.setTimestep(adjustedTimestep);
+    pladapt::TacticList tactics;
 
 	// Check PlanDB for a the existance of the current state
 	State currentState;
 	PlanDB::get_instance()->populate_state_obj(&adjustedConfig, &savedDTMC, &envDTMC, currentState);
 
-
 	// If there is no applicable plan exists generate a new one
 	if((currentState.env_state == UINT_MAX) || (adjustedTimestep >= horizon)) {
-
 		planStartTime = (dynamic_cast<const DartConfiguration&>(currentConfigObj)).getTimestep();
-
 		PlanDB::get_instance()->clean_db();
 
 		/* check if we need to adjust the horizon to the environment size */
@@ -77,8 +74,8 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 		}
 
 		// Generate PRISM initialization strings
-		string initialState = pMcHelper->generateInitializations(currentConfigObj, utilityFunction, horizon);
-		string environmentModel = generateEnvironmentDTMC(envDTMC);
+		const string initialState = pMcHelper->generateInitializations(currentConfigObj, utilityFunction, horizon);
+		const string environmentModel = generateEnvironmentDTMC(envDTMC);
 
 		string templatePath = params[TEMPLATE_PATH].as<string>();
 		if (params[NO_LATENCY].as<bool>()) {
@@ -101,24 +98,21 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 		savedDTMC = envDTMC;
 
 		//TODO: Add switch statement to easily change between the various hybrid planners #drew
-    // There is no straightforward way to pass the information to this point from
-    // command line params 
+        // There is no straightforward way to pass the information to this point from
+        // command line params 
 
-    pladapt::TacticList result;
 
-    // Check threat level
-    cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
-    if(adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange){
-      cout << "In danger: Fast plan" << endl;
-      auto pAdaptMgr = pladapt::PMCAdaptationManager();
-      pAdaptMgr.initialize(pConfigMgr, params, pMcHelper);
+        // Check threat level
+        cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
+        if(adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange){
+            cout << "In danger: Fast plan" << endl;
+            auto pAdaptMgr = pladapt::PMCAdaptationManager();
+            pAdaptMgr.initialize(pConfigMgr, params, pMcHelper);
 
-      result = pAdaptMgr.evaluate(currentConfigObj, envDTMC, utilityFunction, 2);
-    } else {
-      cout << "Safe: Waiting for plan" << endl;
-    }
-
-    return result;
+            tactics = pAdaptMgr.evaluate(currentConfigObj, envDTMC, utilityFunction, 2);
+        } else {
+            cout << "Safe: Waiting for plan" << endl;
+        }
 	} else { // If there is an applicable plan, use it
 
 		// Use the plan
@@ -127,9 +121,10 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 
 		// Convert the vector of strings into a set of strings to remain compatable
 		//  with Gabe's existing code
-		pladapt::TacticList result(p.begin(),p.end());
-		return result;
+		pladapt::TacticList tactics(p.begin(), p.end());
 	}
+
+    return tactics;
 }
 
 

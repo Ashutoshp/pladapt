@@ -60,7 +60,8 @@ enum ARGS {
 	TWO_LEVEL_TACTICS,
 	ADAPT_MGR,
 	PRISM_TEMPLATE,
-	OPT_TEST
+	OPT_TEST,
+	HP_MODE
 #if DART_USE_CE
 	,
 	CE_NONINCREMENTAL,
@@ -86,8 +87,8 @@ static struct option long_options[] = {
 	{"dl-target-sensor-range", required_argument, 0,  DL_TARGET_SENSOR_RANGE },
 	{"auto-range", no_argument, 0,  AUTO_RANGE },
     {"decision-horizon",  required_argument, 0,  DECISION_HORIZON },
-		{"observation-horizon", required_argument, 0, OBSERVATION_HORIZON},
-		{"accumulate-observations", no_argument, 0, ACCUMULATE_OBSERVATIONS},
+	{"observation-horizon", required_argument, 0, OBSERVATION_HORIZON},
+	{"accumulate-observations", no_argument, 0, ACCUMULATE_OBSERVATIONS},
     {"reach-path",  required_argument, 0,  REACH_PATH },
     {"reach-model",  required_argument, 0,  REACH_MODEL },
 	{"distrib-approx", required_argument, 0, DISTRIB_APPROX },
@@ -102,6 +103,7 @@ static struct option long_options[] = {
 	{"adapt-mgr", required_argument, 0, ADAPT_MGR },
     {"prism-template",  required_argument, 0,  PRISM_TEMPLATE },
 	{"opt-test", no_argument, 0, OPT_TEST },
+	{"hp-mode", required_argument, 0, HP_MODE },
 #if DART_USE_CE
 	{"ce-nonincremental", no_argument, 0, CE_NONINCREMENTAL },
 	{"ce-hint-weight", required_argument, 0, CE_HINT_WEIGHT },
@@ -132,7 +134,7 @@ int main(int argc, char** argv) {
 	Params adaptParams;
 	bool autoRange = false;
 
-	while (1) {
+	while (true) {
 		int option_index = 0;
 
 		auto c = getopt_long(argc, argv, "", long_options, &option_index);
@@ -230,6 +232,9 @@ int main(int argc, char** argv) {
 		case OPT_TEST:
 			simParams.optimalityTest = true;
 			break;
+		case HP_MODE:
+			adaptParams.adaptationManager.hpMode = optarg;
+			break;
 #if DART_USE_CE
 		case CE_NONINCREMENTAL:
 			adaptParams.adaptationManager.ce_incremental = false;
@@ -267,6 +272,15 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
+	if (adaptParams.adaptationManager.mgr == "hybrid"
+			&& (adaptParams.adaptationManager.hpMode != "ml0"
+					|| adaptParams.adaptationManager.hpMode != "ml1"
+					|| adaptParams.adaptationManager.hpMode != "pg"
+					|| adaptParams.adaptationManager.hpMode != "cb")) {
+		cout << "ERROR: If adapt-mgr is hybrid, hp-mode (e.g., ml0, ml1, cb, pg) is required" << endl;
+		return 0;
+	}
+
 	if(adaptParams.adaptationManager.accumulateObservations && simParams.scenario.SQUARE_MAP){
 		cout << "'--accumulate-observations' and '--square-map' are not compatible." << endl;
 		return 0;
@@ -284,7 +298,6 @@ int main(int argc, char** argv) {
 	if (adaptParams.configurationSpace.hasEcm) {
 		adaptParams.adaptationManager.REACH_MODEL += "-ecm";
 	}
-
 
 	// generate environment
 #if FIXED2DSPACE

@@ -70,8 +70,6 @@ void DartAdaptationManager::instantiateAdaptationMgr(const Params& params) {
 		adaptMgr.reset(pAdaptMgr);
 	} else if(params.adaptationManager.mgr == ADAPT_MGR_HYBRID) { // Hybrid manager
 		cout << endl << "Testing" << endl;
-
-
 		YAML::Node amParams;
 		amParams[pladapt::PMCAdaptationManager::NO_LATENCY] = (params.adaptationManager.nonLatencyAware || changeAltitudePeriods == 0);
 		amParams[pladapt::PMCAdaptationManager::TEMPLATE_PATH] = params.adaptationManager.PRISM_TEMPLATE;
