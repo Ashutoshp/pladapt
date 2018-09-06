@@ -21,7 +21,7 @@
 
 #include <dartam/DartAdaptationManager.h>
 #include <dartam/DartConfigurationManager.h>
-#include <dartam/HybridAdaptationManager.h>
+#include <pladapt/HybridAdaptationManager.h>
 #include <pladapt/Utils.h>
 #include <pladapt/SDPRAAdaptationManager.h>
 #include <pladapt/PMCRAAdaptationManager.h>
