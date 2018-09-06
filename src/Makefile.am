@@ -19,5 +19,6 @@ libadaptmgr_a_SOURCES = AdaptationManager.cpp Configuration.cpp \
 	timeseries/LESTimeSeriesPredictor.cpp \
 	timeseries/OversamplingTimeSeriesPredictor.cpp timeseries/ScenarioTree.cpp \
 	timeseries/TimeSeriesPredictor.cpp \
-	UtilityFunction.cpp Utils.cpp WrapperTest.cpp
+	UtilityFunction.cpp Utils.cpp WrapperTest.cpp \
+    State.cpp PlanDB.cpp HybridAdaptationManager.cpp    
 

@@ -274,9 +274,9 @@ int main(int argc, char** argv) {
 
 	if (adaptParams.adaptationManager.mgr == "hybrid"
 			&& (adaptParams.adaptationManager.hpMode != "ml0"
-					|| adaptParams.adaptationManager.hpMode != "ml1"
-					|| adaptParams.adaptationManager.hpMode != "pg"
-					|| adaptParams.adaptationManager.hpMode != "cb")) {
+					&& adaptParams.adaptationManager.hpMode != "ml1"
+					&& adaptParams.adaptationManager.hpMode != "pg"
+					&& adaptParams.adaptationManager.hpMode != "cb")) {
 		cout << "ERROR: If adapt-mgr is hybrid, hp-mode (e.g., ml0, ml1, cb, pg) is required" << endl;
 		return 0;
 	}
