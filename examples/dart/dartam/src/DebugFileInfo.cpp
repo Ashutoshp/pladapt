@@ -7,7 +7,7 @@
 
 #include <assert.h>
 #include <boost/filesystem.hpp>
-#include <pladapt/DebugFileInfo.h>
+#include <dartam/DebugFileInfo.h>
 
 DebugFileInfo* DebugFileInfo::mDebugFileInfo = NULL;
 
