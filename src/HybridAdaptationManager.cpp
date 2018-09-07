@@ -21,9 +21,11 @@
 #include <pladapt/HybridAdaptationManager.h>
 #include <pladapt/Utils.h>
 #include <pladapt/PMCRAAdaptationManager.h>
+#include "../examples/dart/dartam/include/dartam/DebugFileInfo.h"
 #include <iostream>
 #include <sstream>
 #include <pladapt/State.h>
+#include <assert.h>
 
 
 using namespace std;
@@ -34,8 +36,14 @@ const char* HybridAdaptationManager::NO_LATENCY = "nolatency";
 const char* HybridAdaptationManager::TEMPLATE_PATH = "templatePath";
 const std::string PCTL = "Rmax=? [ F \"final\" ]";
 
-HybridAdaptationManager::HybridAdaptationManager() : savedDTMC(0){
-
+HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC(0) {
+    if (mode == "pg") hpMode = HpMode::PG;
+    else if (mode == "cb") hpMode = HpMode::CB;
+    else if (mode == "ml0") hpMode = HpMode::ML0;
+    else if (mode == "ml1") hpMode = HpMode::ML1;
+    else if (mode == "so") hpMode = HpMode::SLOWONLY;
+    else if (mode == "si") hpMode = HpMode::SLOWINSTANT;
+    else assert(false);
 }
 
 void HybridAdaptationManager::initialize(std::shared_ptr<const pladapt::ConfigurationManager> configMgr, const YAML::Node& params,
@@ -104,8 +112,12 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 
         // Check threat level
         cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
-        if(adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange){
-            cout << "In danger: Fast plan" << endl;
+        if (hpMode == PG 
+                || (hpMode == CB && adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange)) {
+            if (hpMode == CB) {
+                cout << "In danger: Fast plan" << endl;
+            }
+
             auto pAdaptMgr = pladapt::PMCAdaptationManager();
             pAdaptMgr.initialize(pConfigMgr, params, pMcHelper);
 

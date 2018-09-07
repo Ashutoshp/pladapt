@@ -24,12 +24,14 @@
 #include <cstdlib>
 #include <dartam/RandomSeed.h>
 #include <dartam/DartUtilityFunction.h>
+#include <dartam/DebugFileInfo.h>
 
 // set this to 1 for testing
 #define FIXED2DSPACE 0
 
 using namespace dart::am2;
 using namespace std;
+//DebugFileInfo* DebugFileInfo::mDebugFileInfo = NULL;
 
 enum ARGS {
 	MAP_SIZE,
@@ -133,6 +135,7 @@ int main(int argc, char** argv) {
 	SimulationParams simParams;
 	Params adaptParams;
 	bool autoRange = false;
+    int seed = -1;
 
 	while (true) {
 		int option_index = 0;
@@ -206,7 +209,8 @@ int main(int argc, char** argv) {
 			adaptParams.adaptationManager.nonLatencyAware = true;
 			break;
 		case SEED:
-			RandomSeed::seed(atoi(optarg));
+            seed = atoi(optarg);
+			RandomSeed::seed(seed);
 			break;
 		case PROBABILITY_BOUND:
 			adaptParams.adaptationManager.probabilityBound = atof(optarg);
@@ -276,8 +280,10 @@ int main(int argc, char** argv) {
 			&& (adaptParams.adaptationManager.hpMode != "ml0"
 					&& adaptParams.adaptationManager.hpMode != "ml1"
 					&& adaptParams.adaptationManager.hpMode != "pg"
+					&& adaptParams.adaptationManager.hpMode != "so"
+					&& adaptParams.adaptationManager.hpMode != "si"
 					&& adaptParams.adaptationManager.hpMode != "cb")) {
-		cout << "ERROR: If adapt-mgr is hybrid, hp-mode (e.g., ml0, ml1, cb, pg) is required" << endl;
+		cout << "ERROR: If adapt-mgr is hybrid, hp-mode (e.g., ml0, ml1, cb, pg, so, si) is required" << endl;
 		return 0;
 	}
 
@@ -298,6 +304,9 @@ int main(int argc, char** argv) {
 	if (adaptParams.configurationSpace.hasEcm) {
 		adaptParams.adaptationManager.REACH_MODEL += "-ecm";
 	}
+
+    string parentDir = "/home/ashutosp/dart/logs";
+    DebugFileInfo::getInstance(seed, parentDir.c_str(), (adaptParams.adaptationManager.hpMode).c_str());
 
 	// generate environment
 #if FIXED2DSPACE

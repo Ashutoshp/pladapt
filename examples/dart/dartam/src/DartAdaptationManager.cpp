@@ -19,6 +19,7 @@
  * use and distribution.
  ******************************************************************************/
 
+#include <dartam/DebugFileInfo.h>
 #include <dartam/DartAdaptationManager.h>
 #include <dartam/DartConfigurationManager.h>
 #include <pladapt/HybridAdaptationManager.h>
@@ -75,7 +76,7 @@ void DartAdaptationManager::instantiateAdaptationMgr(const Params& params) {
 		amParams[pladapt::PMCAdaptationManager::TEMPLATE_PATH] = params.adaptationManager.PRISM_TEMPLATE;
 		amParams[pladapt::PMCRAAdaptationManager::PROBABILITY_BOUND] = params.adaptationManager.probabilityBound;
 
-		auto pAdaptMgr = new HybridAdaptationManager();
+		auto pAdaptMgr = new HybridAdaptationManager(params.adaptationManager.hpMode);
 		pAdaptMgr->initialize(configManager, amParams,std::make_shared<const DartPMCHelper>(params));
 		adaptMgr.reset(pAdaptMgr);
 	} else { // SDP or derived

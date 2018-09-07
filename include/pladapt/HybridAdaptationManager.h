@@ -40,7 +40,7 @@ class HybridAdaptationManager : public pladapt::AdaptationManager
 {
 public:
 
-HybridAdaptationManager(void);
+HybridAdaptationManager(const string& mode);
 
 /**
  * params must include:
@@ -60,6 +60,16 @@ static const char* NO_LATENCY;
 static const char* TEMPLATE_PATH;
 virtual ~HybridAdaptationManager();
 
+typedef enum {
+PG,
+CB,
+ML0,
+ML1,
+SLOWONLY,
+SLOWINSTANT
+} HpMode;
+
+
 protected:
 std::shared_ptr<const pladapt::ConfigurationManager> pConfigMgr;
 std::shared_ptr<const pladapt::PMCHelper> pMcHelper;
@@ -67,6 +77,8 @@ pladapt::EnvironmentDTMCPartitioned savedDTMC;
 pladapt::PRISMWrapper deliberativeWrapper;
 PlanDB plan;
 unsigned planStartTime;
+
+HpMode hpMode;
 
 YAML::Node params;
 };

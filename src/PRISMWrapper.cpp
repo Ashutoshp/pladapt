@@ -28,6 +28,7 @@
 #include <string>
 #include <boost/tokenizer.hpp>
 #include <cstdlib>
+#include "../examples/dart/dartam/include/dartam/DebugFileInfo.h"
 
 #include <map>
 #include <iostream>

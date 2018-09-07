@@ -1,5 +1,6 @@
 # include
-include_HEADERS = dartam/DartAdaptationManager.h dartam/DartConfiguration.h \
+include_HEADERS = dartam/DebugFileInfo.h \
+    dartam/DartAdaptationManager.h dartam/DartConfiguration.h \
 	dartam/DartConfigurationManager.h dartam/DartDTMCEnvironment.h \
 	dartam/DartEnvironment.h dartam/DartPMCHelper.h \
 	dartam/DartSimpleEnvironment.h dartam/DartUtilityFunction.h \
