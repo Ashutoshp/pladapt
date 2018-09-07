@@ -38,6 +38,7 @@ public:
     void write(const string& output) const;
     void write(const int& output) const;
     void closeWriter();
+    void cleanFiles();
 
     virtual ~DebugFileInfo();
 };

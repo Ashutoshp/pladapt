@@ -44,6 +44,10 @@ DebugFileInfo::~DebugFileInfo() {
 	mDebugFileInfo = NULL;
 }
 
+void DebugFileInfo::cleanFiles() {
+    boost::filesystem::remove(GetDebugFilePath().c_str());
+}
+
 DebugFileInfo* DebugFileInfo::getInstance(const int seed, const char* parentDir, const char* mode) {
     if (mDebugFileInfo == NULL) {
         mDebugFileInfo = new DebugFileInfo(seed, parentDir, mode);
