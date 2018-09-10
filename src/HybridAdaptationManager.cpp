@@ -26,7 +26,7 @@
 #include <sstream>
 #include <pladapt/State.h>
 #include <assert.h>
-
+#include <boost/filesystem.hpp>
 
 using namespace std;
 
@@ -36,7 +36,8 @@ const char* HybridAdaptationManager::NO_LATENCY = "nolatency";
 const char* HybridAdaptationManager::TEMPLATE_PATH = "templatePath";
 const std::string PCTL = "Rmax=? [ F \"final\" ]";
 
-HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC(0) {
+HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC(0),
+		pathToStoreProfilingProblems("/home/ashutosp/ProfilingProblems/") {
     if (mode == "pg") hpMode = HpMode::PG;
     else if (mode == "cb") hpMode = HpMode::CB;
     else if (mode == "ml0") hpMode = HpMode::ML0;
@@ -46,15 +47,20 @@ HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC
     else assert(false);
 }
 
-void HybridAdaptationManager::initialize(std::shared_ptr<const pladapt::ConfigurationManager> configMgr, const YAML::Node& params,
-                                         std::shared_ptr<const DartPMCHelper> helper) {
+void HybridAdaptationManager::initialize(std::shared_ptr<const pladapt::ConfigurationManager> configMgr,
+                                            const YAML::Node& params,
+                                            std::shared_ptr<const DartPMCHelper> helper) {
 	pConfigMgr = configMgr;
 	this->params = params;
 	pMcHelper = helper;
+    fastPlanPath = "";
+    slowPlanPath = "";
 }
 
-pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configuration& currentConfigObj, const pladapt::EnvironmentDTMCPartitioned& envDTMC,
-                                                      const pladapt::UtilityFunction& utilityFunction, unsigned horizon) {
+pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configuration& currentConfigObj,
+                                                        const pladapt::EnvironmentDTMCPartitioned& envDTMC,
+                                                        const pladapt::UtilityFunction& utilityFunction,
+                                                        unsigned horizon) {
 
 	// QUESTION: Is it possible for the model to be open at this point but not #drew
 	//  be loaded into the PlanDB? If so it needs to be accounted for here
@@ -69,7 +75,7 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 	PlanDB::get_instance()->populate_state_obj(&adjustedConfig, &savedDTMC, &envDTMC, currentState);
 
 	// If there is no applicable plan exists generate a new one
-	if((currentState.env_state == UINT_MAX) || (adjustedTimestep >= horizon)) {
+	if ((currentState.env_state == UINT_MAX) || (adjustedTimestep >= horizon)) {
 		planStartTime = (dynamic_cast<const DartConfiguration&>(currentConfigObj)).getTimestep();
 		PlanDB::get_instance()->clean_db();
 
@@ -91,17 +97,15 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 		}
 
 		templatePath += ".prism";
-		string* pPath = 0;
 		deliberativeWrapper.setModelTemplatePath(templatePath);
 
 		// Generates the prism model and adversary transition model
-		deliberativeWrapper.generatePersistentPlan(environmentModel, initialState, PCTL, pPath);
+		deliberativeWrapper.generatePersistentPlan(environmentModel, initialState, PCTL);
+		slowPlanPath = deliberativeWrapper.getModelDirectory();
+		//cout << "slowPlanPath = " << slowPlanPath << endl;
 
 		// Load the plan into PlanDB
-		PlanDB::get_instance()->populate_db(deliberativeWrapper.getModelDirectory().c_str());
-
-		// Clean up PRISM output
-		deliberativeWrapper.closeModel();
+		PlanDB::get_instance()->populate_db(slowPlanPath.c_str());
 
 		savedDTMC = envDTMC;
 
@@ -109,19 +113,35 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
         // There is no straightforward way to pass the information to this point from
         // command line params 
 
+		double classifierLabel = -1;
+		string envModel = "";
 
         // Check threat level
         cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
         if (hpMode == PG 
-                || (hpMode == CB && adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange)) {
+                || (hpMode == CB
+                		&& adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange)) {
             if (hpMode == CB) {
-                cout << "In danger: Fast plan" << endl;
+                cout << "In danger: ";
             }
+
+            cout << "Fast Planning Triggered" << endl;
 
             auto pAdaptMgr = pladapt::PMCAdaptationManager();
             pAdaptMgr.initialize(pConfigMgr, params, pMcHelper);
 
-            tactics = pAdaptMgr.evaluate(currentConfigObj, envDTMC, utilityFunction, 2);
+            unsigned reactiveHorizon = 2;
+            tactics = pAdaptMgr.evaluate(currentConfigObj, envDTMC, utilityFunction, reactiveHorizon);
+            fastPlanPath = pAdaptMgr.getPlanPath();
+		    cout << "fastPlanPath = " << fastPlanPath << endl;
+            
+            if (hpMode == PG) {
+                int seed = DebugFileInfo::getInstance()->getSimulationSeed();
+
+                DumpPlanningProblems::get_instance(pathToStoreProfilingProblems, seed)
+                                    ->copySampleProblems(fastPlanPath, slowPlanPath, currentState,
+                                            envModel, classifierLabel);
+            }
         } else {
             cout << "Safe: Waiting for plan" << endl;
         }
@@ -139,6 +159,16 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
     return tactics;
 }
 
+void HybridAdaptationManager::cleanupModel() const {
+    boost::filesystem::path slow(slowPlanPath);
+    boost::filesystem::path fast(fastPlanPath);
+    
+    if (boost::filesystem::exists(slow)
+            && boost::filesystem::exists(fast)) {
+        boost::filesystem::remove_all(slow);
+        boost::filesystem::remove_all(fast);
+    }
+}
 
 // these constants depend on the PRISM model
 const string STATE_VAR = "s";

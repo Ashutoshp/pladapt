@@ -22,6 +22,7 @@
 #include <iostream>
 #include <sstream>
 #include <pladapt/PRISMWrapper.h>
+#include <boost/filesystem.hpp>
 
 
 using namespace std;
@@ -63,12 +64,11 @@ TacticList PMCAdaptationManager::evaluate(const Configuration& currentConfigObj,
 
     PRISMWrapper planner;
     planner.setModelTemplatePath(templatePath);
-    string* pPath = 0;
-    if (debug) {
-        pPath = new string;
-    }
+    
+    std::vector<std::string> tactics = planner.plan(environmentModel, initialState, PCTL);
+	planPath = planner.getModelDirectory();
+	//cout << "PMCAdaptationManager::evaluate planPath = " << planPath << endl;
 
-    std::vector<std::string> tactics = planner.plan(environmentModel, initialState, PCTL, pPath);
     TacticList result;
 
 	// remove sufixes from tactic names (everything after after (and including) an underscore)
@@ -80,14 +80,19 @@ TacticList PMCAdaptationManager::evaluate(const Configuration& currentConfigObj,
     	result.insert(tactic);
     }
 
-    if (pPath) {
-        cout << "*debug path " << *pPath << endl;
-        delete pPath;
-    }
 
     return result;
 }
 
+void PMCAdaptationManager::cleanupModel() const {
+    boost::filesystem::path p(planPath);
+    
+    if (boost::filesystem::exists(p)) {
+        boost::filesystem::remove_all(planPath);
+    } else {
+        assert(false);
+    }
+}
 
 // these constants depend on the PRISM model
 const string STATE_VAR = "s";

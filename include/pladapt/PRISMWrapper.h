@@ -37,8 +37,6 @@ int currentDir;
 std::string* storedPath;
 char* tempDir;
 std::string modelDirectory;
-bool modelOpen;
-
 
 public:
 PRISMWrapper();
@@ -56,16 +54,14 @@ const char* labelsPath = "result.lab";
  * @throws std::domain_error if there is no solution
  */
 std::vector<std::string> plan(const std::string& environmentModel, const std::string& initialState,
-                              const std::string& pctl, std::string* path = 0);
+                              const std::string& pctl);
 
 void generatePersistentPlan(const std::string& environmentModel, const std::string& initialState,
-                              const std::string& pctl, std::string* path = 0);
+                              const std::string& pctl);
 
 void setModelTemplatePath(const std::string& modelTemplatePath);
 void setPrismOptions(const std::vector<std::string>& options);
 
-void closeModel();
-bool isModelOpen();
 std::string getModelDirectory();
 virtual ~PRISMWrapper();
 

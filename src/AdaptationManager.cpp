@@ -41,4 +41,6 @@ std::shared_ptr<Strategy> AdaptationManager::getStrategy() {
 	return std::shared_ptr<Strategy>();
 }
 
+void AdaptationManager::cleanupModel() const {
+}
 } // namespace

@@ -39,6 +39,7 @@ public:
     void write(const int& output) const;
     void closeWriter();
     void cleanFiles();
+    inline int getSimulationSeed() const {return mSeed;}
 
     virtual ~DebugFileInfo();
 };

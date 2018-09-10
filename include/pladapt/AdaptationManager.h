@@ -66,6 +66,7 @@ class AdaptationManager
     virtual std::shared_ptr<Strategy> getStrategy();
 
     virtual ~AdaptationManager();
+    virtual void cleanupModel() const;
 
   protected:
     bool debug = false; /**< print debug info if true */

@@ -174,7 +174,10 @@ pladapt::TacticList DartAdaptationManager::decideAdaptation(
 
 	/* make adaptation decision */
 	//adaptMgr->setDebug(monitoringInfo.position.x == 4);
-	return adaptMgr->evaluate(convertToDiscreteConfiguration(monitoringInfo), jointEnv, *pUtilityFunction, params.adaptationManager.HORIZON);
+	pladapt::TacticList tacticList = adaptMgr->evaluate(convertToDiscreteConfiguration(monitoringInfo), jointEnv, *pUtilityFunction, params.adaptationManager.HORIZON);
+    adaptMgr->cleanupModel();
+
+    return tacticList;
 }
 
 DartConfiguration DartAdaptationManager::convertToDiscreteConfiguration(const DartMonitoringInfo& info) const {

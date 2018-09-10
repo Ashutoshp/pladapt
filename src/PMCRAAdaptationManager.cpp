@@ -74,10 +74,6 @@ TacticList PMCRAAdaptationManager::evaluate(const Configuration& currentConfigOb
 
     PRISMWrapper planner;
     planner.setModelTemplatePath(templatePath);
-    string* pPath = 0;
-    if (debug) {
-        pPath = new string;
-    }
 
     stringstream pctl;
     pctl << PCTL_A;
@@ -87,11 +83,11 @@ TacticList PMCRAAdaptationManager::evaluate(const Configuration& currentConfigOb
     std::vector<std::string> tactics;
     try {
     	planner.setPrismOptions(PRISM_OPTIONS_FOR_RA);
-    	tactics = planner.plan(environmentModel, initialState, pctl.str(), pPath);
+    	tactics = planner.plan(environmentModel, initialState, pctl.str());
     } catch (std::domain_error&) {
     	cout << "Survivability requirement cannot be met < " << survivalRequirement << endl;
     	planner.setPrismOptions(PRISM_OPTIONS_DEFAULT);
-    	tactics = planner.plan(environmentModel, initialState, PCTL_BEST_EFFORT, pPath);
+    	tactics = planner.plan(environmentModel, initialState, PCTL_BEST_EFFORT);
     }
 
 
@@ -103,11 +99,6 @@ TacticList PMCRAAdaptationManager::evaluate(const Configuration& currentConfigOb
     		tactic.erase(pos);
     	}
     	result.insert(tactic);
-    }
-
-    if (pPath) {
-        cout << "*debug path " << *pPath << endl;
-        delete pPath;
     }
 
     return result;

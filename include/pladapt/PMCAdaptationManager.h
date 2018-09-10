@@ -26,6 +26,7 @@
 #include <pladapt/ConfigurationManager.h>
 #include <memory>
 #include <yaml-cpp/yaml.h>
+#include <stdlib.h>
 
 namespace pladapt {
 
@@ -69,6 +70,8 @@ public:
     		std::shared_ptr<const PMCHelper> helper);
     virtual TacticList evaluate(const Configuration& currentConfigObj, const EnvironmentDTMCPartitioned& envDTMC,
     		const UtilityFunction& utilityFunction, unsigned horizon);
+    virtual inline std::string getPlanPath() const {return planPath;}
+    virtual void cleanupModel() const;
 
     static std::string generateEnvironmentDTMC(const EnvironmentDTMCPartitioned& envDTMC);
 
@@ -80,6 +83,7 @@ protected:
     std::shared_ptr<const PMCHelper> pMcHelper;
 
     YAML::Node params;
+    std::string planPath;
 };
 
 }

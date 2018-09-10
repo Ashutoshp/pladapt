@@ -1,5 +1,5 @@
 # include
-include_HEADERS = pladapt/AdaptationManager.h pladapt/Configuration.h \
+include_HEADERS = pladapt/State.h pladapt/AdaptationManager.h pladapt/Configuration.h \
 	pladapt/ConfigurationManager.h pladapt/ConfigurationSpace.h \
 	pladapt/DTMCPartitionedStates.h pladapt/EnvironmentDTMCPartitioned.h \
 	pladapt/Environment.h pladapt/GenericConfiguration.h \
@@ -13,4 +13,4 @@ include_HEADERS = pladapt/AdaptationManager.h pladapt/Configuration.h \
 	pladapt/timeseries/OversamplingTimeSeriesPredictor.h \
 	pladapt/timeseries/ScenarioTree.h pladapt/timeseries/TimeSeriesPredictor.h \
 	pladapt/UtilityFunction.h pladapt/Utils.h \
-	pladapt/State.h pladapt/PlanDB.h pladapt/HybridAdaptationManager.h
+	pladapt/PlanDB.h pladapt/HybridAdaptationManager.h
