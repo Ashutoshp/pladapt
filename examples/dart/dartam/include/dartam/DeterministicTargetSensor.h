@@ -30,6 +30,8 @@ namespace am2 {
 class DeterministicTargetSensor: public TargetSensor {
 public:
 	using TargetSensor::TargetSensor;
+    DeterministicTargetSensor(double range, double detectionFormationFactor, double ecmProbability);
+    DeterministicTargetSensor(const unsigned int& i, const double& j);
 	virtual double getProbabilityOfDetection(const DartConfiguration& config) ;//override;
 	virtual ~DeterministicTargetSensor();
 };

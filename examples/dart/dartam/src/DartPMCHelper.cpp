@@ -38,7 +38,13 @@ DartPMCHelper::DartPMCHelper(const Params& params)
 	detectionFormationFactor(params.environmentModel.TARGET_DETECTION_FORMATION_FACTOR),
 	sensorRange(params.environmentModel.TARGET_SENSOR_RANGE),
 	hasEcm(params.configurationSpace.hasEcm),
-	twoLevelTactics(params.adaptationManager.twoLevelTactics)
+	twoLevelTactics(params.adaptationManager.twoLevelTactics),
+    ecmThreatProbability(params.longRangeSensor.THREAT_ECM_PROBABILITY),
+    ecmTargetProbability(params.longRangeSensor.TARGET_ECM_PROBABILITY),
+    survivalReward(params.adaptationManager.finalReward),
+    probabilityBound(params.adaptationManager.probabilityBound),
+    errorTolerance(params.longRangeSensor.ERROR_TOLERANCE),
+    adaptManager(params.adaptationManager.mgr)
 {
 }
 
@@ -49,7 +55,8 @@ DartPMCHelper::~DartPMCHelper() {
 
 
 std::string DartPMCHelper::generateInitializations(const pladapt::Configuration& currentConfigObj,
-                                                   const pladapt::UtilityFunction& utilityFunction, unsigned horizon) const {
+                                                   const pladapt::UtilityFunction& utilityFunction,
+                                                   unsigned horizon, bool reactiveMode) const {
 
 	auto& config = dynamic_cast<const DartConfiguration&>(currentConfigObj);
 
@@ -73,9 +80,11 @@ std::string DartPMCHelper::generateInitializations(const pladapt::Configuration&
 	initialState << "const init_c = " << config.getEcm() << ';'
 	             << endl;
 	initialState << "const init_f = " << config.getFormation() << ';' << endl;
-	initialState << "const bool ECM_ENABLED = " << (hasEcm ? "true" : "false")
+	initialState << "const bool ECM_ENABLED = " 
+                 << ((hasEcm && !reactiveMode && adaptManager == "hybrid") ? "true" : "false")
 	             << ';' << endl;
-	initialState << "const bool TWO_LEVEL_ENABLED = " << (twoLevelTactics ? "true" : "false")
+	initialState << "const bool TWO_LEVEL_ENABLED = " 
+                 << ((twoLevelTactics && !reactiveMode && adaptManager == "hybrid") ? "true" : "false")
  	             << ';' << endl;
 	initialState << "const int ini_IncAlt_state = " << config.getTtcIncAlt()
 	             << ';' << endl;
@@ -85,6 +94,14 @@ std::string DartPMCHelper::generateInitializations(const pladapt::Configuration&
  	             << ';' << endl;
  	initialState << "const int ini_DecAlt2_state = " << config.getTtcDecAlt2()
  	             << ';' << endl;
+ 	initialState << "const double ecm_threat_prob = " << ecmThreatProbability
+ 	             << ';' << endl;
+ 	initialState << "const double ecm_target_prob = " << ecmTargetProbability
+ 	             << ';' << endl;
+ 	initialState << "const double survival_reward = " << survivalReward
+ 	             << ';' << endl;
+
+    //cout << "config.getAltitudeLevel() = " << config.getAltitudeLevel() << endl;
 
 	return initialState.str();
 }

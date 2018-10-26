@@ -37,6 +37,8 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/moment.hpp>
+#include "../dartam/include/dartam/DebugFileInfo.h"
+#include <string>
 
 using namespace std;
 using namespace pladapt;
@@ -64,11 +66,13 @@ shared_ptr<Threat> Simulation::createThreatSim(const SimulationParams& simParams
 	if (simParams.optimalityTest) {
 		pThreatSim = make_shared<DeterministicThreat>(
 				adaptParams.environmentModel.THREAT_RANGE,
-				adaptParams.environmentModel.DESTRUCTION_FORMATION_FACTOR);
+				adaptParams.environmentModel.DESTRUCTION_FORMATION_FACTOR,
+                adaptParams.longRangeSensor.THREAT_ECM_PROBABILITY);
 	} else {
 		pThreatSim = make_shared<Threat>(
 				adaptParams.environmentModel.THREAT_RANGE,
-				adaptParams.environmentModel.DESTRUCTION_FORMATION_FACTOR);
+				adaptParams.environmentModel.DESTRUCTION_FORMATION_FACTOR,
+                adaptParams.longRangeSensor.THREAT_ECM_PROBABILITY);
 	}
 	return pThreatSim;
 }
@@ -83,7 +87,8 @@ shared_ptr<TargetSensor> Simulation::createTargetSensor(const SimulationParams& 
 	} else {
 		pTargetSensor = make_shared<TargetSensor>(
 				adaptParams.environmentModel.TARGET_SENSOR_RANGE,
-				adaptParams.environmentModel.TARGET_DETECTION_FORMATION_FACTOR);
+				adaptParams.environmentModel.TARGET_DETECTION_FORMATION_FACTOR,
+                adaptParams.longRangeSensor.TARGET_ECM_PROBABILITY);
 	}
 	return pTargetSensor;
 }
@@ -97,13 +102,15 @@ DartConfiguration executeTactic(string tactic, const DartConfiguration& config,
 
 	auto newConfig = config;
 	cout << "executing tactic " << tactic << endl;
+    DebugFileInfo::getInstance()->write("executing tactic " + tactic);
+
 	if (tactic == INC_ALTITUDE) {
 		if (changeAltitudePeriods > 0) {
 			newConfig.setTtcIncAlt(changeAltitudePeriods);
 		} else {
 			newConfig.setAltitudeLevel(newConfig.getAltitudeLevel() + 1);
 		}
-    assert(newConfig.getAltitudeLevel() < configParams.ALTITUDE_LEVELS);
+        assert(newConfig.getAltitudeLevel() < configParams.ALTITUDE_LEVELS);
 	} else if (tactic == DEC_ALTITUDE) {
 		if (changeAltitudePeriods > 0) {
 			newConfig.setTtcDecAlt(changeAltitudePeriods);
@@ -200,8 +207,11 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 
 	/* initialize platform */
 	DartConfiguration currentConfig(params.configurationSpace.ALTITUDE_LEVELS - 1, DartConfiguration::Formation::LOOSE, 0, 0, 0, 0, 0);
+    //cout << "Inside Simulation ALTITUDE_LEVELS = " << params.configurationSpace.ALTITUDE_LEVELS - 1 << endl;
+    //currentConfig.printOn();
 
 	unsigned targetsDetected = 0;
+	unsigned detected = 0;
 	bool destroyed = false;
 
 	unsigned screenPosition = 0;
@@ -213,6 +223,8 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 	while (routeIt != route.end()) {
 		position = *routeIt;
 
+        DebugFileInfo::getInstance()->write("current position: "
+                + to_string(position.x) + ";" + to_string(position.y));
 		cout << "current position: " << position << endl;
 
 		/*
@@ -267,6 +279,7 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 		if (!simParams.optimalityTest || (simParams.optimalityTest && !gotStrategy)) {
 			/* invoke adaptation manager */
 			auto startTime = myclock::now();
+            //cout << "Calling decideAdaptation" << endl;
 			tactics = adaptMgr.decideAdaptation(monitoringInfo);
 			auto delta = myclock::now() - startTime;
 			double deltaMsec = chrono::duration_cast<chrono::duration<double, std::milli>>(delta).count();
@@ -296,6 +309,7 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 		 * started, but we cannot wait until they complete.
 		 */
 		for (auto tactic : tactics) {
+            //cout << "Executing tactic = " << tactic << endl;
 			currentConfig = executeTactic(tactic, currentConfig, params.tactics,
 					params.adaptationManager, params.configurationSpace);
 		}
@@ -311,12 +325,17 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 		destroyed = pThreatSim->isDestroyed(threatEnv, currentConfig, position);
 
 		if (destroyed) {
+            DebugFileInfo::getInstance()->write("Team destroyed at position "
+                    + std::to_string(position.x) + ";" + std::to_string(position.y));
 			cout << "Team destroyed at position " << position << endl;
+            ++detected;
 			break;
 		}
 
 		/* simulate target detection */
 		if (pTargetSensor->sense(currentConfig, targetEnv.isObjectAt(position))) {
+            DebugFileInfo::getInstance()->write("Target detected at "
+                    + std::to_string(position.x) + "; " + std::to_string(position.y));
 			cout << "Target detected at " << position << endl;
 			targetsDetected++;
 			currentConfig.setTargetDetected(true);
@@ -362,48 +381,69 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 			}
 		}
 		for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h > 0; h--) {
+            DebugFileInfo::getInstance()->write(h - 1, false);
 			cout << h-1;
 			for (unsigned p = 0; p < pathLength; p++) {
+                DebugFileInfo::getInstance()->write(screen[p][h - 1], false);
 				cout << screen[p][h - 1];
 			}
 			cout << endl;
+            DebugFileInfo::getInstance()->writeEndLine();
 		}
 		for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h < params.configurationSpace.ALTITUDE_LEVELS + 2; h++) {
+            DebugFileInfo::getInstance()->write(" ", false);
 			cout << " ";
 			for (unsigned p = 0; p < pathLength; p++) {
+                DebugFileInfo::getInstance()->write(screen[p][h], false);
 				cout << screen[p][h];
 			}
 			cout << endl;
+            DebugFileInfo::getInstance()->writeEndLine();
 		}
 
 		currentConfig.setTimestep(timestep);
 		timestep++;
 	}
 
-	if (!destroyed) {
+	//if (!destroyed) {
+        DebugFileInfo::getInstance()->write("Total targets detected: "
+                + to_string(targetsDetected));
 		cout << "Total targets detected: " << targetsDetected << endl;
-	}
+	//}
+        //DebugFileInfo::getInstance()->write("Total detected: "
+        //        + to_string(detected));
+		//cout << "Total detected: " << detected << endl;
 
 	for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h > 0 ; h--) {
 		for (unsigned p = 0; p < pathLength; p++) {
+            DebugFileInfo::getInstance()->write(screen[p][h - 1], false);
 			cout << screen[p][h - 1];
 		}
 		cout << endl;
+        DebugFileInfo::getInstance()->writeEndLine();
 	}
 	for (unsigned h = params.configurationSpace.ALTITUDE_LEVELS; h < params.configurationSpace.ALTITUDE_LEVELS + 2; h++) {
 		for (unsigned p = 0; p < pathLength; p++) {
+            DebugFileInfo::getInstance()->write(screen[p][h], false);
 			cout << screen[p][h];
 		}
 		cout << endl;
+        DebugFileInfo::getInstance()->writeEndLine();
 	}
 
 	results.destroyed = destroyed;
 	results.targetsDetected = targetsDetected;
 	results.whereDestroyed = position;
-	results.missionSuccess = !destroyed && targetsDetected >= simParams.scenario.TARGETS / 2.0;
+	results.missionSuccess = !destroyed && targetsDetected >= simParams.scenario.TARGETS / 4.0;
 	results.decisionTimeAvg = boost::accumulators::mean(decisionTimeStats);
 	results.decisionTimeVar = boost::accumulators::moment<2>(decisionTimeStats);
 	results.numQuickDecisions = numQuickDecisions;
+    results.deliberativePlanFailedCount = adaptMgr.getDeliberativeFailedCount();
+    results.reactivePlanningCount = adaptMgr.getReactivePlanningCount();
+
+    if (params.adaptationManager.hpMode == "fast") {
+        results.reactivePlanningCount = simParams.scenario.MAP_SIZE;
+    }
 
 	return results;
 }

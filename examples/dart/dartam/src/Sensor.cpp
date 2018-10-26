@@ -21,6 +21,7 @@
 
 #include <dartam/Sensor.h>
 #include <dartam/RandomSeed.h>
+#include <iostream>
 
 using namespace std;
 
@@ -34,8 +35,12 @@ Sensor::Sensor(double falsePositiveRate, double falseNegativeRate)
 }
 
 bool Sensor::sense(bool truth) {
+    //cout << "Sensor::sense truth = " << truth << endl;
 	bool result = truth;
 	double random = uniform(randomGenerator);
+    //cout << "Sensor::sense random = " << random << endl;
+    //cout << "Sensor::sense fnr = " << fnr << endl;
+
 	if (truth && random <= fnr) {
 		result = false;
 	} else if (!truth && random <= fpr) {

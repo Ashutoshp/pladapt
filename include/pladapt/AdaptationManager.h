@@ -67,6 +67,8 @@ class AdaptationManager
 
     virtual ~AdaptationManager();
     virtual void cleanupModel() const;
+    virtual unsigned getDeliberativeFailedCount() const {return 0;}
+    virtual unsigned getReactivePlanningCount() const {return 0;}
 
   protected:
     bool debug = false; /**< print debug info if true */

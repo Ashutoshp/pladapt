@@ -51,6 +51,8 @@ struct SimulationResults {
 	double decisionTimeAvg;
 	double decisionTimeVar;
 	int numQuickDecisions;
+    unsigned deliberativePlanFailedCount;
+    unsigned reactivePlanningCount;
 };
 
 class Simulation {

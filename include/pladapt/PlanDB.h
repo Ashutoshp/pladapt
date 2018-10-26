@@ -44,7 +44,7 @@ bool populate_db(const char* dir);
 void destroy_db();
 void clean_db();
 bool get_plan(const DartConfiguration* config, const pladapt::EnvironmentDTMCPartitioned* oldPredictions,
-              const pladapt::EnvironmentDTMCPartitioned* newPredictions, Plan& plan);
+              const pladapt::EnvironmentDTMCPartitioned* newPredictions, Plan& plan, double errorTolerance);
 
 Plan get_actions(State& state);
 ~PlanDB();
@@ -52,7 +52,7 @@ PlanDB();
 bool populate_state_obj(const DartConfiguration* config,
                         const pladapt::EnvironmentDTMCPartitioned* oldPredictions,
                         const pladapt::EnvironmentDTMCPartitioned* newPredictions,
-                        State& state);
+                        State& state, double errorTolerance);
 
 private:
 

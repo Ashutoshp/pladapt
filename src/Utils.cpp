@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdexcept>
 #include <iostream>
-
+#include <boost/filesystem.hpp>
 
 DumpPlanningProblems* DumpPlanningProblems::mDumpPlanningProblems = NULL;
 
@@ -81,6 +81,7 @@ DumpPlanningProblems::DumpPlanningProblems(const string& location, const int see
                                                mTempDirTemplate(mLocation +  "/" + mModelTemplate) {
 
     mFeaturesFileName = to_string(seed) + ".csv";
+    boost::filesystem::remove(mLocation +  "/" + mFeaturesFileName);    
 }
 
 DumpPlanningProblems::~DumpPlanningProblems() {

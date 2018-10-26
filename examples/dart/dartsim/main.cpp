@@ -25,6 +25,7 @@
 #include <dartam/RandomSeed.h>
 #include <dartam/DartUtilityFunction.h>
 #include <dartam/DebugFileInfo.h>
+#include <fstream>
 
 // set this to 1 for testing
 #define FIXED2DSPACE 0
@@ -63,7 +64,13 @@ enum ARGS {
 	ADAPT_MGR,
 	PRISM_TEMPLATE,
 	OPT_TEST,
-	HP_MODE
+	HP_MODE,
+    ECM_THREAT_PROB,
+    ECM_TARGET_PROB,
+    ECM_DETECT_PROB,
+    ERROR_TOLERANCE,
+    DETECTION_FORMATION_FACTOR,
+    DESTRUCTION_FORMATION_FACTOR,
 #if DART_USE_CE
 	,
 	CE_NONINCREMENTAL,
@@ -106,6 +113,11 @@ static struct option long_options[] = {
     {"prism-template",  required_argument, 0,  PRISM_TEMPLATE },
 	{"opt-test", no_argument, 0, OPT_TEST },
 	{"hp-mode", required_argument, 0, HP_MODE },
+	{"ecm-threat", required_argument, 0, ECM_THREAT_PROB },
+	{"ecm-target", required_argument, 0, ECM_TARGET_PROB },
+	{"error-tolerance", required_argument, 0, ERROR_TOLERANCE },
+	{"detection-formation-factor", required_argument, 0, DETECTION_FORMATION_FACTOR },
+	{"destruction-formation-factor", required_argument, 0, DESTRUCTION_FORMATION_FACTOR },
 #if DART_USE_CE
 	{"ce-nonincremental", no_argument, 0, CE_NONINCREMENTAL },
 	{"ce-hint-weight", required_argument, 0, CE_HINT_WEIGHT },
@@ -239,6 +251,21 @@ int main(int argc, char** argv) {
 		case HP_MODE:
 			adaptParams.adaptationManager.hpMode = optarg;
 			break;
+		case ECM_THREAT_PROB:
+			adaptParams.longRangeSensor.THREAT_ECM_PROBABILITY= atof(optarg);
+			break;
+		case ECM_TARGET_PROB:
+			adaptParams.longRangeSensor.TARGET_ECM_PROBABILITY= atof(optarg);
+			break;
+        case ERROR_TOLERANCE:
+            adaptParams.longRangeSensor.ERROR_TOLERANCE = atof(optarg);
+            break;
+        case DETECTION_FORMATION_FACTOR:
+            adaptParams.environmentModel.TARGET_DETECTION_FORMATION_FACTOR = atof(optarg);
+            break;
+        case DESTRUCTION_FORMATION_FACTOR:
+            adaptParams.environmentModel.DESTRUCTION_FORMATION_FACTOR = atof(optarg);
+            break;
 #if DART_USE_CE
 		case CE_NONINCREMENTAL:
 			adaptParams.adaptationManager.ce_incremental = false;
@@ -287,6 +314,10 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
+    if (adaptParams.adaptationManager.mgr == "pmc") {
+        adaptParams.adaptationManager.hpMode = "fast";
+    }
+
 	if(adaptParams.adaptationManager.accumulateObservations && simParams.scenario.SQUARE_MAP){
 		cout << "'--accumulate-observations' and '--square-map' are not compatible." << endl;
 		return 0;
@@ -305,8 +336,15 @@ int main(int argc, char** argv) {
 		adaptParams.adaptationManager.REACH_MODEL += "-ecm";
 	}
 
+    // TODO also write command line
     string parentDir = "/home/ashutosp/dart/logs";
     DebugFileInfo::getInstance(seed, parentDir.c_str(), (adaptParams.adaptationManager.hpMode).c_str());
+    
+    for(int i = 0; i < argc; ++i) {
+        DebugFileInfo::getInstance()->write(argv[i], false);
+        DebugFileInfo::getInstance()->write(" ", false);
+    }
+    DebugFileInfo::getInstance()->writeEndLine();
 
 	// generate environment
 #if FIXED2DSPACE
@@ -390,6 +428,9 @@ int main(int argc, char** argv) {
 				<< " threat=" << adaptParams.environmentModel.THREAT_RANGE << endl;
 	}
 
+    //cout << "Inside main ----- adaptParams.environmentModel.THREAT_RANGE = " << adaptParams.environmentModel.THREAT_RANGE << endl;
+    //cout << "Inside main ----- adaptParams.configurationSpace.ALTITUDE_LEVELS = " 
+    //        << adaptParams.configurationSpace.ALTITUDE_LEVELS << endl;
 
 	// instantiate adaptation manager
 	shared_ptr<TargetSensor> pTargetSensor = Simulation::createTargetSensor(simParams,
@@ -411,10 +452,17 @@ int main(int argc, char** argv) {
 			route, adaptMgr);
 
 	const std::string RESULTS_PREFIX = "out:";
-	cout << RESULTS_PREFIX << "destroyed=" << results.destroyed << endl;
-	cout << RESULTS_PREFIX << "targetsDetected=" << results.targetsDetected << endl;
-	cout << RESULTS_PREFIX << "missionSuccess=" << results.missionSuccess << endl;
 
+	cout << RESULTS_PREFIX << "destroyed=" << results.destroyed << endl;
+    DebugFileInfo::getInstance()->write(RESULTS_PREFIX + "destroyed=" + to_string(results.destroyed));
+
+	cout << RESULTS_PREFIX << "targetsDetected=" << results.targetsDetected << endl;
+    DebugFileInfo::getInstance()->write(RESULTS_PREFIX + "targetsDetected=" + to_string(results.targetsDetected));
+	
+    cout << RESULTS_PREFIX << "missionSuccess=" << results.missionSuccess << endl;
+    DebugFileInfo::getInstance()->write(RESULTS_PREFIX + "missionSuccess=" + to_string(results.missionSuccess));
+
+    std::string summaryFile = "summary.csv";
 	cout << "csv," << results.targetsDetected << ',' << results.destroyed
 			<< ',' << results.whereDestroyed.x
 			<< ',' << results.missionSuccess
@@ -422,6 +470,39 @@ int main(int argc, char** argv) {
 			<< ',' << results.decisionTimeVar
 			<< ',' << results.numQuickDecisions
 			<<  endl;
+
+    std::fstream summaryWriter;
+    summaryWriter.open(summaryFile.c_str(), std::fstream::in | std::fstream::out | std::fstream::app);
+
+    summaryWriter << seed << ", "
+            << adaptParams.adaptationManager.mgr << ", "
+            << adaptParams.adaptationManager.hpMode << ", "
+            << adaptParams.adaptationManager.HORIZON << ", "
+            << adaptParams.longRangeSensor.OBSERVATION_HORIZON << ", "
+            << adaptParams.configurationSpace.hasEcm << ", "
+            << adaptParams.configurationSpace.ALTITUDE_LEVELS << ", "
+            << adaptParams.adaptationManager.accumulateObservations << ", "
+            << simParams.scenario.MAP_SIZE << ", "
+            << adaptParams.adaptationManager.twoLevelTactics << ", "
+            << simParams.scenario.TARGETS << ", "
+            << simParams.scenario.THREATS << ", "
+            << adaptParams.adaptationManager.finalReward << ", "
+            << adaptParams.longRangeSensor.THREAT_ECM_PROBABILITY << ", "
+            << adaptParams.longRangeSensor.TARGET_ECM_PROBABILITY << ", "
+            << adaptParams.longRangeSensor.ERROR_TOLERANCE << ", "
+            << adaptParams.environmentModel.TARGET_DETECTION_FORMATION_FACTOR << ", "
+            << adaptParams.environmentModel.DESTRUCTION_FORMATION_FACTOR << ", "
+            << results.targetsDetected << ", " 
+            << results.destroyed << ", " 
+            << results.whereDestroyed.x << ", " 
+            << results.missionSuccess << ", " 
+            << results.decisionTimeAvg << ", " 
+            << results.decisionTimeVar << ", " 
+            << results.numQuickDecisions <<  ", "
+            << results.deliberativePlanFailedCount << ", "
+            << results.reactivePlanningCount << endl;
+            
+    summaryWriter.close();
 
 	return 0;
 }

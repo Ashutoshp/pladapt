@@ -70,11 +70,13 @@ void DartAdaptationManager::instantiateAdaptationMgr(const Params& params) {
 		pAdaptMgr->initialize(configManager, amParams, std::make_shared<const DartPMCHelper>(params));
 		adaptMgr.reset(pAdaptMgr);
 	} else if(params.adaptationManager.mgr == ADAPT_MGR_HYBRID) { // Hybrid manager
-		cout << endl << "Testing" << endl;
+		//cout << endl << "Testing" << endl;
 		YAML::Node amParams;
 		amParams[pladapt::PMCAdaptationManager::NO_LATENCY] = (params.adaptationManager.nonLatencyAware || changeAltitudePeriods == 0);
 		amParams[pladapt::PMCAdaptationManager::TEMPLATE_PATH] = params.adaptationManager.PRISM_TEMPLATE;
 		amParams[pladapt::PMCRAAdaptationManager::PROBABILITY_BOUND] = params.adaptationManager.probabilityBound;
+
+        //cout << "params.environmentModel.THREAT_RANGE = " << params.environmentModel.THREAT_RANGE << endl;
 
 		auto pAdaptMgr = new HybridAdaptationManager(params.adaptationManager.hpMode);
 		pAdaptMgr->initialize(configManager, amParams,std::make_shared<const DartPMCHelper>(params));
@@ -175,6 +177,8 @@ pladapt::TacticList DartAdaptationManager::decideAdaptation(
 	/* make adaptation decision */
 	//adaptMgr->setDebug(monitoringInfo.position.x == 4);
 	pladapt::TacticList tacticList = adaptMgr->evaluate(convertToDiscreteConfiguration(monitoringInfo), jointEnv, *pUtilityFunction, params.adaptationManager.HORIZON);
+    // Ashutosh TODO. I added cleanupModel API. But in sdp mode model* dir is deleted which is needed for debugging.
+    // Check if we need to cleanup or not.
     adaptMgr->cleanupModel();
 
     return tacticList;
@@ -222,11 +226,28 @@ std::shared_ptr<pladapt::Strategy> DartAdaptationManager::getStrategy() {
 	return adaptMgr->getStrategy();
 }
 
+unsigned DartAdaptationManager::getDeliberativeFailedCount() const {
+    unsigned deliberativePlanFailedCount = 0;
+
+    if (params.adaptationManager.mgr == "hybrid") {
+        deliberativePlanFailedCount = adaptMgr->getDeliberativeFailedCount();
+    }
+
+    return deliberativePlanFailedCount;
+}
+
+unsigned DartAdaptationManager::getReactivePlanningCount() const {
+    unsigned reactivePlanningCount = 0;
+
+    if (params.adaptationManager.mgr == "hybrid") {
+        reactivePlanningCount = adaptMgr->getReactivePlanningCount();
+    }
+
+    return reactivePlanningCount;
+}
 
 DartAdaptationManager::~DartAdaptationManager() {
 	// TODO Auto-generated destructor stub
 }
-
-
 } /* namespace am2 */
 } /* namespace dart */

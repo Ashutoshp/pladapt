@@ -55,6 +55,8 @@ void HybridAdaptationManager::initialize(std::shared_ptr<const pladapt::Configur
 	pMcHelper = helper;
     fastPlanPath = "";
     slowPlanPath = "";
+    deliberativeFailedCount = 0;
+    reactivePlanningCount = 0;
 }
 
 pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configuration& currentConfigObj,
@@ -69,13 +71,26 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
     DartConfiguration adjustedConfig = DartConfiguration(dynamic_cast<const DartConfiguration&>(currentConfigObj));
     adjustedConfig.setTimestep(adjustedTimestep);
     pladapt::TacticList tactics;
+    static unsigned reused = 0;
 
 	// Check PlanDB for a the existance of the current state
 	State currentState;
-	PlanDB::get_instance()->populate_state_obj(&adjustedConfig, &savedDTMC, &envDTMC, currentState);
+	PlanDB::get_instance()->populate_state_obj(&adjustedConfig, 
+            &savedDTMC, &envDTMC, currentState,
+            dynamic_cast<const DartPMCHelper&>(*pMcHelper).errorTolerance);
 
 	// If there is no applicable plan exists generate a new one
 	if ((currentState.env_state == UINT_MAX) || (adjustedTimestep >= horizon)) {
+        if (currentState.env_state == UINT_MAX) {
+            ++deliberativeFailedCount;
+            DebugFileInfo::getInstance()->write("Deliberative Plan Failed");
+            cout << "Deliberative Plan Failed" << endl;
+        } else {
+            DebugFileInfo::getInstance()->write("Deliberative Plan Over");
+            cout << "Deliberative Plan Over" << endl;
+        }
+
+        reused = 0;
 		planStartTime = (dynamic_cast<const DartConfiguration&>(currentConfigObj)).getTimestep();
 		PlanDB::get_instance()->clean_db();
 
@@ -100,9 +115,11 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 		deliberativeWrapper.setModelTemplatePath(templatePath);
 
 		// Generates the prism model and adversary transition model
+        DebugFileInfo::getInstance()->write("Slow Planning Triggered");
 		deliberativeWrapper.generatePersistentPlan(environmentModel, initialState, PCTL);
 		slowPlanPath = deliberativeWrapper.getModelDirectory();
-		//cout << "slowPlanPath = " << slowPlanPath << endl;
+		DebugFileInfo::getInstance()->write("slowPlanPath = " + slowPlanPath);
+		cout << "slowPlanPath = " << slowPlanPath << endl;
 
 		// Load the plan into PlanDB
 		PlanDB::get_instance()->populate_db(slowPlanPath.c_str());
@@ -118,22 +135,32 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 
         // Check threat level
         cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
+        DebugFileInfo::getInstance()->write("Threat range:" + std::to_string(dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange));
         if (hpMode == PG 
                 || (hpMode == CB
                 		&& adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange)) {
             if (hpMode == CB) {
+                DebugFileInfo::getInstance()->write("In danger: ");
                 cout << "In danger: ";
             }
 
             cout << "Fast Planning Triggered" << endl;
+            ++reactivePlanningCount;
+            DebugFileInfo::getInstance()->write("Fast Planning Triggered");
 
             auto pAdaptMgr = pladapt::PMCAdaptationManager();
             pAdaptMgr.initialize(pConfigMgr, params, pMcHelper);
 
+            //cout << "Assert-1 HybridAdaptationManager::evaluate" << endl;
+            //assert(false);
+
             unsigned reactiveHorizon = 2;
             tactics = pAdaptMgr.evaluate(currentConfigObj, envDTMC, utilityFunction, reactiveHorizon);
             fastPlanPath = pAdaptMgr.getPlanPath();
-		    cout << "fastPlanPath = " << fastPlanPath << endl;
+		    DebugFileInfo::getInstance()->write("fastPlanPath = " + fastPlanPath);
+            cout << "fastPlanPath = " << fastPlanPath << endl;
+            //cout << "Assert-2 HybridAdaptationManager::evaluate" << endl;
+            //assert(false);
             
             if (hpMode == PG) {
                 int seed = DebugFileInfo::getInstance()->getSimulationSeed();
@@ -144,28 +171,58 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
             }
         } else {
             cout << "Safe: Waiting for plan" << endl;
+            DebugFileInfo::getInstance()->write("Safe: Waiting for deliberative plan");
         }
 	} else { // If there is an applicable plan, use it
 
 		// Use the plan
 		PlanDB::Plan p;
-		PlanDB::get_instance()->get_plan(&adjustedConfig, &savedDTMC, &envDTMC, p);
+		PlanDB::get_instance()->get_plan(&adjustedConfig, &savedDTMC, &envDTMC,
+                p, dynamic_cast<const DartPMCHelper&>(*pMcHelper).errorTolerance);
+        DebugFileInfo::getInstance()->write("Slow Plan Reused = " + to_string(++reused));
+		
 
-		// Convert the vector of strings into a set of strings to remain compatable
+        PlanDB::Plan::iterator itr = p.begin();
+        while (itr != p.end()) {
+            //cout << "HybridAdaptationManager::evaluate plan = " << *itr << endl;
+            tactics.insert(*itr);
+            ++itr;
+        }
+
+        // Convert the vector of strings into a set of strings to remain compatable
 		//  with Gabe's existing code
-		pladapt::TacticList tactics(p.begin(), p.end());
+		//tactics(p.begin(), p.end());
 	}
+
+    pladapt::TacticList::iterator it = tactics.begin();
+
+    while (it != tactics.end()) {
+        DebugFileInfo::getInstance()->write(*it + " ", false);
+        //cout << "HybridAdaptationManager::evaluate ##### tactic = " << *it << endl;
+        ++it;
+    }
+    
+    if (tactics.size() == 0) {
+        DebugFileInfo::getInstance()->write("No Tactic Suggested");
+    } else {
+        DebugFileInfo::getInstance()->writeEndLine();
+    }
 
     return tactics;
 }
 
 void HybridAdaptationManager::cleanupModel() const {
+    //cout << "deleting slowPath = " << slowPlanPath << endl;
+    //cout << "deleting fastPath = " << fastPlanPath << endl;
+
     boost::filesystem::path slow(slowPlanPath);
     boost::filesystem::path fast(fastPlanPath);
     
-    if (boost::filesystem::exists(slow)
-            && boost::filesystem::exists(fast)) {
+    if (boost::filesystem::exists(slow)) {
         boost::filesystem::remove_all(slow);
+    }
+
+    if (boost::filesystem::exists(fast)) {
         boost::filesystem::remove_all(fast);
     }
 }

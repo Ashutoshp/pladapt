@@ -30,7 +30,8 @@ namespace am2 {
 
 class TargetSensor {
 public:
-	TargetSensor(double range, double detectionFormationFactor);
+    TargetSensor(){}
+	TargetSensor(double range, double detectionFormationFactor, double ecmProbability);
 	virtual ~TargetSensor();
 	virtual bool sense(const DartConfiguration& config, bool targetPresent);
 
@@ -42,6 +43,7 @@ public:
 protected:
 	double range;
 	double detectionFormationFactor;
+    double ecmProbability;
 	std::uniform_real_distribution<> uniform;
 	std::default_random_engine randomGenerator;
 };

@@ -28,11 +28,13 @@ using namespace std;
 namespace dart {
 namespace am2 {
 
-Threat::Threat(double range, double destructionFormationFactor)
+Threat::Threat(double range, double destructionFormationFactor, double ecmProbability)
 	: range(range),
 	  destructionFormationFactor(destructionFormationFactor),
-	  randomGenerator(RandomSeed::getNextSeed())
+      ecmProbability(ecmProbability),
+      randomGenerator(RandomSeed::getNextSeed())
 {
+   //cout << "Threat::Threat destructionFormationFactor = " << destructionFormationFactor << endl;
 }
 
 Threat::~Threat() {
@@ -43,11 +45,13 @@ double Threat::getProbabilityOfDestruction(const DartConfiguration& config) {
 			((config.getFormation() == DartConfiguration::Formation::LOOSE) ? 1.0 : (1.0 / destructionFormationFactor))
 			* max(0.0, range - (config.getAltitudeLevel() + 1)) / range; // +1 because level 0 is one level above ground
 
+    //cout << "### Threat::getProbabilityOfDestruction probOfDestruction = " << probOfDestruction << endl;
 	// ECM reduces the prob of destruction
 	if (config.getEcm()) {
-		probOfDestruction *= 0.25;
+		probOfDestruction *= ecmProbability;
 	}
 
+   //cout << "Threat::getProbabilityOfDestruction probOfDestruction = " << probOfDestruction << endl;
 	return probOfDestruction;
 //	return (config.getAltitudeLevel() + 1 <= threatRange) ? 1.0 : 0.0;
 }
@@ -58,8 +62,9 @@ bool Threat::isDestroyed(const RealEnvironment& threatEnv,
 	bool threat = threatEnv.isObjectAt(location);
 	if (threat) {
 		double probOfDestruction = getProbabilityOfDestruction(config);
-
+       //cout << "Threat::isDestroyed = probOfDestruction = " << probOfDestruction << endl;
 		double random = uniform(randomGenerator);
+       //cout << "Threat::isDestroyed = random = " << random << endl;
 		destroyed = (random <= probOfDestruction);
 	}
 	return destroyed;

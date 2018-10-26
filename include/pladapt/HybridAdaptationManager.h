@@ -51,11 +51,15 @@ HybridAdaptationManager(const string& mode);
  */
 virtual void initialize(std::shared_ptr<const pladapt::ConfigurationManager> configMgr, const YAML::Node& params,
                         std::shared_ptr<const DartPMCHelper> helper);
-virtual pladapt::TacticList evaluate(const pladapt::Configuration& currentConfigObj, const pladapt::EnvironmentDTMCPartitioned& envDTMC,
-                            const pladapt::UtilityFunction& utilityFunction, unsigned horizon);
+virtual pladapt::TacticList evaluate(const pladapt::Configuration& currentConfigObj,
+            const pladapt::EnvironmentDTMCPartitioned& envDTMC,
+            const pladapt::UtilityFunction& utilityFunction, unsigned horizon);
 virtual void cleanupModel() const;
 
 std::string generateEnvironmentDTMC(const pladapt::EnvironmentDTMCPartitioned& envDTMC);
+
+unsigned getDeliberativeFailedCount() const {return deliberativeFailedCount;}
+unsigned getReactivePlanningCount() const {return reactivePlanningCount;}
 
 static const char* NO_LATENCY;
 static const char* TEMPLATE_PATH;
@@ -81,6 +85,8 @@ unsigned planStartTime;
 const string pathToStoreProfilingProblems;
 string fastPlanPath;
 string slowPlanPath;
+unsigned deliberativeFailedCount;
+unsigned reactivePlanningCount;
 
 HpMode hpMode;
 

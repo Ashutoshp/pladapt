@@ -16,6 +16,18 @@ mdp
 //const double threatRange
 //const double detectionFormationFactor
 //const double sensorRange
+//const init_a
+//const init_c
+//const init_f
+//const bool ECM_ENABLED
+//const bool TWO_LEVEL_ENABLED
+//const int ini_IncAlt_state
+//const int ini_DecAlt_state
+//const int ini_IncAlt2_state
+//const int ini_DecAlt2_state
+//const double ecm_threat_prob
+//const double ecm_target_prob
+//const double survival_reward
 
 
 //#init
@@ -61,7 +73,7 @@ module sys
 	
     [GoTight_start] f=0 -> 1: (a'=a_GoTight_impact)
 		 &  (f'=f_GoTight_impact);
-	[GoLoose_start] f=1 -> 1: (a'=a_GoLoose_impact)
+    [GoLoose_start] f=1 -> 1: (a'=a_GoLoose_impact)
 		 &  (f'=f_GoLoose_impact);
 	
     [IncAlt_complete] a < MAX_ALT_LEVEL -> 1:  (a'=a_IncAlt_impact)
@@ -118,10 +130,10 @@ module EcmOn
     [EcmOn_start] sys_go & EcmOn_go & EcmOn_applicable & ECM_ENABLED -> (EcmOn_used'=true) & (EcmOn_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & EcmOn_go & EcmOn_applicable -> (EcmOn_go'=false);
+    [EcmOn_pass] sys_go & EcmOn_go & EcmOn_applicable -> (EcmOn_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & EcmOn_go & !EcmOn_applicable -> 1 : (EcmOn_go'=false);
+    [EcmOn_invalid] sys_go & EcmOn_go & !EcmOn_applicable -> 1 : (EcmOn_go'=false);
 
     [tick] !EcmOn_go -> 1: (EcmOn_go'=true) & (EcmOn_used'=false);
 endmodule
@@ -132,7 +144,7 @@ endmodule
 //************************************************************************
 
 // Applicability conditions
-formula EcmOff_applicable = EcmOff_compatible & f=1;
+formula EcmOff_applicable = EcmOff_compatible & c=1;
 
 module EcmOff
     EcmOff_used : bool init false;
@@ -142,10 +154,10 @@ module EcmOff
     [EcmOff_start] sys_go & EcmOff_go & EcmOff_applicable & ECM_ENABLED -> (EcmOff_used'=true) & (EcmOff_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & EcmOff_go & EcmOff_applicable -> (EcmOff_go'=false);
+    [EcmOff_pass] sys_go & EcmOff_go & EcmOff_applicable -> (EcmOff_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & EcmOff_go & !EcmOff_applicable -> 1 : (EcmOff_go'=false);
+    [EcmOff_invalid] sys_go & EcmOff_go & !EcmOff_applicable -> 1 : (EcmOff_go'=false);
 
     [tick] !EcmOff_go -> 1: (EcmOff_go'=true) & (EcmOff_used'=false);
 endmodule
@@ -166,10 +178,10 @@ module GoTight
     [GoTight_start] sys_go & GoTight_go & GoTight_applicable -> (GoTight_used'=true) & (GoTight_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & GoTight_go & GoTight_applicable -> (GoTight_go'=false);
+    [GoTight_pass] sys_go & GoTight_go & GoTight_applicable -> (GoTight_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & GoTight_go & !GoTight_applicable -> 1 : (GoTight_go'=false);
+    [GoTight_invalid] sys_go & GoTight_go & !GoTight_applicable -> 1 : (GoTight_go'=false);
 
     [tick] !GoTight_go -> 1: (GoTight_go'=true) & (GoTight_used'=false);
 endmodule
@@ -190,10 +202,10 @@ module GoLoose
     [GoLoose_start] sys_go & GoLoose_go & GoLoose_applicable -> (GoLoose_used'=true) & (GoLoose_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & GoLoose_go & GoLoose_applicable -> (GoLoose_go'=false);
+    [GoLoose_pass] sys_go & GoLoose_go & GoLoose_applicable -> (GoLoose_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & GoLoose_go & !GoLoose_applicable -> 1 : (GoLoose_go'=false);
+    [GoLoose_invalid] sys_go & GoLoose_go & !GoLoose_applicable -> 1 : (GoLoose_go'=false);
 
     [tick] !GoLoose_go -> 1: (GoLoose_go'=true) & (GoLoose_used'=false);
 endmodule
@@ -216,13 +228,13 @@ module IncAlt
     [IncAlt_start] sys_go & IncAlt_go & IncAlt_state=0 & IncAlt_applicable -> (IncAlt_state'=IncAlt_LATENCY_PERIODS) & (IncAlt_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & IncAlt_go & IncAlt_state=0 & IncAlt_applicable -> (IncAlt_go'=false);
+    [IncAlt_pass] sys_go & IncAlt_go & IncAlt_state=0 & IncAlt_applicable -> (IncAlt_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & IncAlt_go & IncAlt_state=0 & !IncAlt_applicable -> 1 : (IncAlt_go'=false);
+    [IncAlt_invalid] sys_go & IncAlt_go & IncAlt_state=0 & !IncAlt_applicable -> 1 : (IncAlt_go'=false);
 
     // Progress of the tactic
-    [] sys_go & IncAlt_go & IncAlt_state > 1 -> 1: (IncAlt_state'=IncAlt_state-1) & (IncAlt_go'=false);
+    [IncAlt_progress] sys_go & IncAlt_go & IncAlt_state > 1 -> 1: (IncAlt_state'=IncAlt_state-1) & (IncAlt_go'=false);
 
     // Completion of the tactic
     [IncAlt_complete] sys_go & IncAlt_go & IncAlt_state=1 -> 1: (IncAlt_state'=0) & (IncAlt_go'=true);
@@ -248,13 +260,13 @@ module DecAlt
     [DecAlt_start] sys_go & DecAlt_go & DecAlt_state=0 & DecAlt_applicable -> (DecAlt_state'=DecAlt_LATENCY_PERIODS) & (DecAlt_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & DecAlt_go & DecAlt_state=0 & DecAlt_applicable -> (DecAlt_go'=false);
+    [DecAlt_pass] sys_go & DecAlt_go & DecAlt_state=0 & DecAlt_applicable -> (DecAlt_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & DecAlt_go & DecAlt_state=0 & !DecAlt_applicable -> 1 : (DecAlt_go'=false);
+    [DecAlt_invalid] sys_go & DecAlt_go & DecAlt_state=0 & !DecAlt_applicable -> 1 : (DecAlt_go'=false);
 
     // Progress of the tactic
-    [] sys_go & DecAlt_go & DecAlt_state > 1 -> 1: (DecAlt_state'=DecAlt_state-1) & (DecAlt_go'=false);
+    [DecAlt_progress] sys_go & DecAlt_go & DecAlt_state > 1 -> 1: (DecAlt_state'=DecAlt_state-1) & (DecAlt_go'=false);
 
     // Completion of the tactic
     [DecAlt_complete] sys_go & DecAlt_go & DecAlt_state=1 -> 1: (DecAlt_state'=0) & (DecAlt_go'=true);
@@ -277,13 +289,13 @@ module IncAlt2
     [IncAlt2_start] sys_go & IncAlt2_go & IncAlt2_state=0 & IncAlt2_applicable & TWO_LEVEL_ENABLED -> (IncAlt2_state'=IncAlt_LATENCY_PERIODS) & (IncAlt2_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & IncAlt2_go & IncAlt2_state=0 & IncAlt2_applicable -> (IncAlt2_go'=false);
+    [IncAlt2_pass] sys_go & IncAlt2_go & IncAlt2_state=0 & IncAlt2_applicable -> (IncAlt2_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & IncAlt2_go & IncAlt2_state=0 & !IncAlt2_applicable -> 1 : (IncAlt2_go'=false);
+    [IncAlt2_invalid] sys_go & IncAlt2_go & IncAlt2_state=0 & !IncAlt2_applicable -> 1 : (IncAlt2_go'=false);
 
     // Progress of the tactic
-    [] sys_go & IncAlt2_go & IncAlt2_state > 1 -> 1: (IncAlt2_state'=IncAlt2_state-1) & (IncAlt2_go'=false);
+    [IncAlt2_progress] sys_go & IncAlt2_go & IncAlt2_state > 1 -> 1: (IncAlt2_state'=IncAlt2_state-1) & (IncAlt2_go'=false);
 
     // Completion of the tactic
     [IncAlt2_complete] sys_go & IncAlt2_go & IncAlt2_state=1 -> 1: (IncAlt2_state'=0) & (IncAlt2_go'=true);
@@ -309,13 +321,13 @@ module DecAlt2
     [DecAlt2_start] sys_go & DecAlt2_go & DecAlt2_state=0 & DecAlt2_applicable & TWO_LEVEL_ENABLED -> (DecAlt2_state'=DecAlt2_LATENCY_PERIODS) & (DecAlt2_go'=false);
 
     // Tactic applicable, but do not start it
-    [] sys_go & DecAlt2_go & DecAlt2_state=0 & DecAlt2_applicable -> (DecAlt2_go'=false);
+    [DecAlt2_pass] sys_go & DecAlt2_go & DecAlt2_state=0 & DecAlt2_applicable -> (DecAlt2_go'=false);
 
     // Pass if the tactic is not applicable
-    [] sys_go & DecAlt2_go & DecAlt2_state=0 & !DecAlt2_applicable -> 1 : (DecAlt2_go'=false);
+    [DecAlt2_invalid] sys_go & DecAlt2_go & DecAlt2_state=0 & !DecAlt2_applicable -> 1 : (DecAlt2_go'=false);
 
     // Progress of the tactic
-    [] sys_go & DecAlt2_go & DecAlt2_state > 1 -> 1: (DecAlt2_state'=DecAlt2_state-1) & (DecAlt2_go'=false);
+    [DecAlt2_progress] sys_go & DecAlt2_go & DecAlt2_state > 1 -> 1: (DecAlt2_state'=DecAlt2_state-1) & (DecAlt2_go'=false);
 
     // Completion of the tactic
     [DecAlt2_complete] sys_go & DecAlt2_go & DecAlt2_state=1 -> 1: (DecAlt2_state'=0) & (DecAlt2_go'=true);
@@ -335,7 +347,7 @@ formula probOfThreat = stateValue;
 
 formula probabilityOfDestruction = probOfThreat
 	* ((f = LOOSE) ? 1.0 : (1.0 / destructionFormationFactor))
-    * ((c = EMC_ON) ? 0.25 : 1.0)
+    * ((c = EMC_ON) ? ecm_threat_prob : 1.0)
 		* max(0.0, threatRange - (a + 1)) / threatRange; // +1 because level 0 is one level above ground
 
 module constraint // in this case the constraint is surviving
@@ -350,7 +362,7 @@ formula probOfTarget= stateValue1;
 
 formula probOfDetection = probOfTarget
 	* ((f = LOOSE) ? 1.0 : (1.0 / detectionFormationFactor))
-    * ((c = EMC_ON) ? 0.25 : 1.0)
+    * ((c = EMC_ON) ? ecm_target_prob : 1.0)
 	* max(0.0, sensorRange - (a + 1)) / sensorRange; // +1 because level 0 is one level above ground
 
 module sensor
@@ -359,7 +371,10 @@ module sensor
 endmodule
 
 rewards "util"
-	[tack] satisfied & targetDetected : 1;
+    //[tack] satisfied & targetDetected : 1;
+    
+	[tack] (time < HORIZON) & satisfied & targetDetected : 1;
+	[tack] (time = HORIZON) & satisfied : (targetDetected ? (survival_reward/2) : 0) + survival_reward;
 
 	// give slight preference to not adapting
 	[tick] time = 0 &  IncAlt_state=ini_IncAlt_state & DecAlt_state=ini_DecAlt_state & a=init_a & f=init_f : 0.000000001;

@@ -139,6 +139,7 @@ public:
      */
     std::shared_ptr<pladapt::Strategy> getStrategy();
 
+    //DartAdaptationManager();
     virtual ~DartAdaptationManager();
 
 protected:
@@ -158,12 +159,17 @@ protected:
 	RealEnvironment targetEnv;
 	std::unique_ptr<EnvironmentMonitor> pEnvThreatMonitor;
 	std::unique_ptr<EnvironmentMonitor> pEnvTargetMonitor;
+    unsigned deliberativeFailedCount;
+    unsigned reactivePlanningCount;
 
 public:
 	/**
 	 * TODO this should be in ConfigurationManager and be required in all derived classes
 	 */
 	DartConfiguration convertToDiscreteConfiguration(const DartMonitoringInfo& info) const;
+
+    unsigned getDeliberativeFailedCount() const;
+    unsigned getReactivePlanningCount() const;
 
 	void printEnvironment();
 };

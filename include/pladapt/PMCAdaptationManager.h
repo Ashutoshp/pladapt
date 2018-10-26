@@ -48,7 +48,7 @@ public:
 	 * agreed upon this method and the particular utility function class.
 	 */
 	virtual std::string generateInitializations(const Configuration& currentConfigObj,
-			const UtilityFunction& utilityFunction, unsigned horizon) const = 0;
+			const UtilityFunction& utilityFunction, unsigned horizon, bool reactiveMode = false) const = 0;
 	virtual ~PMCHelper();
 };
 

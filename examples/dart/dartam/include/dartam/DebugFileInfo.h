@@ -35,8 +35,10 @@ public:
 
     string GetDebugFilePath() const;
 
-    void write(const string& output) const;
-    void write(const int& output) const;
+    void write(const string& output, bool endLine = true) const;
+    void write(char output, bool endLine = true) const;
+    void write(unsigned output, bool endLine = true) const;
+    void writeEndLine() const;
     void closeWriter();
     void cleanFiles();
     inline int getSimulationSeed() const {return mSeed;}

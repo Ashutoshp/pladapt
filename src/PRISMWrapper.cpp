@@ -304,6 +304,8 @@ bool PRISMWrapper::generateModel(string environmentModel, string initialState, c
 		return false;
 	}
 
+    //cout << "PRISMWrapper::generateModel initialState = " << initialState << endl;
+
 	ifstream fin(modelTemplatePath.c_str());
 	if (!fin) {
 		cout << "Could not read input file " << get_current_dir_name() << '/' << modelTemplatePath << endl;
@@ -348,6 +350,10 @@ std::vector<std::string> PRISMWrapper::plan(const std::string& environmentModel,
 
 	// save current dir and chdir into the temp
 	currentDir = open(".", O_RDONLY);
+	//char* buff1 = new char[2048];
+	//buff1 = getcwd(buff1, 2048);
+    //cout << "PRISMWrapper::plan buff1 = " << buff1 << endl;
+
 	if (currentDir == -1) {
 		throw runtime_error("error PRISMWrapper::plan chdir");
 	}
@@ -360,6 +366,7 @@ std::vector<std::string> PRISMWrapper::plan(const std::string& environmentModel,
 	// Save the path to the model directory
 	char* buff = new char[2048];
 	buff = getcwd(buff, 2048);
+    //cout << "PRISMWrapper::plan buff = " << buff << endl;
 	modelDirectory = string(buff);
 	delete [] buff;
 
@@ -376,6 +383,8 @@ std::vector<std::string> PRISMWrapper::plan(const std::string& environmentModel,
 	 * can set the initial state so that it seems that it has one period to go.
 	 */
 
+    //cout << "PRISMWrapper::plan modelPath = " << modelPath << endl;
+
 	if (generateModel(environmentModel, initialState, modelPath)) {
 		if (runPrism(pctl.c_str())) {
 			if (boost::filesystem::exists(adversaryPath)) {
@@ -385,6 +394,7 @@ std::vector<std::string> PRISMWrapper::plan(const std::string& environmentModel,
 				throw std::domain_error("PRISM didn't generate an adversary");
 			}
 		} else {
+            DebugFileInfo::getInstance()->write("error PRISMWrapper::plan runPrism");
 			throw runtime_error("error PRISMWrapper::plan runPrism");
 		}
 	} else {
@@ -392,7 +402,11 @@ std::vector<std::string> PRISMWrapper::plan(const std::string& environmentModel,
 	}
 
 	// Move to the current directory
-    if (fchdir(currentDir) == -1) {}; // nothing we can do about it
+    if (fchdir(currentDir) == -1) {
+        // nothing we can do about it
+        assert(false);
+    }
+
 	close(currentDir);
 
 	return actions;
@@ -426,7 +440,6 @@ void PRISMWrapper::generatePersistentPlan(const std::string& environmentModel, c
 	modelDirectory = string(buff);
 	delete [] buff;
 
-
 	if (generateModel(environmentModel, initialState, modelPath)) {
 		if (runPrism(pctl.c_str())) {
 			if (!boost::filesystem::exists(adversaryPath)) {
@@ -436,6 +449,7 @@ void PRISMWrapper::generatePersistentPlan(const std::string& environmentModel, c
 				throw std::domain_error("PRISM didn't generate an adversary");
 			}
 		} else {
+            DebugFileInfo::getInstance()->write("error PRISMWrapper::generatePersistentPlan runPrism");
 			throw runtime_error("error PRISMWrapper::plan runPrism");
 		}
 	} else {
@@ -443,8 +457,11 @@ void PRISMWrapper::generatePersistentPlan(const std::string& environmentModel, c
 	}
 
 	// Move to the current directory
-	if (fchdir(currentDir) == -1) {}; // nothing we can do about it
-	close(currentDir);
+	if (fchdir(currentDir) == -1) {
+	    assert(false);
+    } // nothing we can do about it
+
+    close(currentDir);
 }
 
 /*void PRISMWrapper::closeModel(){

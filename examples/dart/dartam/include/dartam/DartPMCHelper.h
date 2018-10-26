@@ -24,6 +24,7 @@
 
 #include <pladapt/PMCAdaptationManager.h>
 #include "Parameters.h"
+#include <string.h>
 
 
 namespace dart {
@@ -34,7 +35,8 @@ public:
 	DartPMCHelper(const Params& params);
 	virtual ~DartPMCHelper();
     std::string generateInitializations(const pladapt::Configuration& currentConfigObj,
-            const pladapt::UtilityFunction& utilityFunction, unsigned horizon) const override;
+            const pladapt::UtilityFunction& utilityFunction, 
+            unsigned horizon, bool reactiveMode = false) const override;
 
     double evaluationPeriod;
     double changeAltitudeLatency;
@@ -43,8 +45,14 @@ public:
     double threatRange;
     double detectionFormationFactor;
     double sensorRange;
-		bool hasEcm;
-		bool twoLevelTactics;
+	bool hasEcm;
+	bool twoLevelTactics;
+    double ecmThreatProbability;
+    double ecmTargetProbability;
+    double survivalReward;
+    double probabilityBound;
+    double errorTolerance;
+    std::string adaptManager;
 };
 
 } /* namespace am2 */

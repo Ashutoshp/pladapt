@@ -240,7 +240,7 @@ string PlanDB::get_tactic_str(TacticEnum tactic) {
 bool PlanDB::populate_state_obj(const DartConfiguration* config,
                                 const pladapt::EnvironmentDTMCPartitioned* oldPredictions,
                                 const pladapt::EnvironmentDTMCPartitioned* newPredictions,
-                                State& state) {
+                                State& state, double errorTolerance) {
 	bool valid_state = false;
 
 	// TODO: Confirm that these are the correct components for target and threat #drew
@@ -250,12 +250,14 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 	double currentTargetProb = newPredictions->getStateValue(0).getComponent(0).asDouble();
 	double currentThreatProb = newPredictions->getStateValue(0).getComponent(1).asDouble();
 
+    //cout << "PlanDB::populate_state_obj currentTargetProb = " << currentTargetProb << endl;
+    //cout << "PlanDB::populate_state_obj currentThreatProb = " << currentThreatProb << endl;
 
 	// Loop through the states and find the closest match
 	// Find the first state where both target and thread are within the bound
 	double targetProb;
 	double threatProb;
-	double tolerance = 0.25f;
+	double tolerance = errorTolerance;
 
 	// Define priority queue to keep track of env matches
 	vector<pair<double, int>> matchingEnvStates;
@@ -267,7 +269,10 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 
 		// Compute the L1 distance of the predicted probabilities from the current
 		double distanceL1 = (abs(threatProb - currentThreatProb) + abs(targetProb - currentTargetProb));
+        //cout << "PlanDB::populate_state_obj distanceL1 = " << distanceL1 << endl;
+
 		if(distanceL1 < tolerance) {
+            //cout << "PlanDB::populate_state_obj #### Matched distanceL1 = " << distanceL1 << endl;
 			matchingEnvStates.push_back(pair<double,int>(distanceL1,s));
 		}
 	}
@@ -303,6 +308,28 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 	state.incAlt2_go = true;
 	state.decAlt2_go = true;
 	state.clockstep = 0;
+        
+    /*cout << "state.timestep = " << state.timestep << endl;
+    cout << "state.altitude = " << state.altitude << endl;
+    cout << "state.formation = " << state.formation << endl;
+    cout << "state.ecm = " << state.ecm << endl;
+    cout << "state.incAlt_state = " << state.incAlt_state << endl;
+    cout << "state.decAlt_state = " << state.decAlt_state << endl;
+    cout << "state.incAlt2_state = " << state.incAlt2_state << endl;
+    cout << "state.decAlt2_state = " << state.decAlt2_state << endl;
+    cout << "state.targetDetected = " << state.targetDetected << endl;
+    cout << "state.ecmOn_go = " << state.ecmOn_go << endl;
+    cout << "state.ecmOff_go = " << state.ecmOff_go << endl;
+    cout << "state.goTight_go = " << state.goTight_go << endl;
+    cout << "state.goLoose_go = " << state.goLoose_go << endl;
+    cout << "state.ecmOn_used = " << state.ecmOn_used << endl;
+    cout << "state.ecmOff_used = " << state.ecmOff_used << endl;
+    cout << "state.incAlt_go = " << state.incAlt_go << endl;
+    cout << "state.decAlt_go = " << state.decAlt_go << endl;
+    cout << "state.incAlt2_go = " << state.incAlt2_go << endl;
+    cout << "state.decAlt2_go = " << state.decAlt2_go << endl;
+    cout << "state.clockstep = " << state.clockstep << endl;*/
+
 	// TODO: May need to check both true and false for satisfied #drew
 	// From what I've seen there are no states in the plan where satisfied = false
 	state.satisfied = true;
@@ -314,6 +341,8 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 		unsigned long stateNum = get_state(state);
 		if(stateNum != ULONG_MAX){
 			valid_state = true;
+            //cout << "*************** Valid State Found ***************" << endl;
+            //cout << "PlanDB::populate_state_obj state_str = " << state.get_state_str() << endl;
 			return valid_state;
 		}
 	}
@@ -326,6 +355,7 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 unsigned long PlanDB::get_state(State& state) {
 	unsigned long state_no = ULONG_MAX;
 	string state_str = state.get_state_str();
+    //cout << "PlanDB::get_state state_str = " << state_str << endl;
 	size_t state_hash = get_hash(state_str);
 	StateHashMap::iterator itr = m_state_hash_map.find(state_hash);
 
@@ -337,13 +367,38 @@ unsigned long PlanDB::get_state(State& state) {
 }
 
 bool PlanDB::get_plan(const DartConfiguration* config,const pladapt::EnvironmentDTMCPartitioned* oldPredictions,
-                      const pladapt::EnvironmentDTMCPartitioned* newPredictions, Plan& plan) {
+                      const pladapt::EnvironmentDTMCPartitioned* newPredictions, Plan& plan, double errorTolerance) {
 	bool plan_found = false;
+    //cout << "Inside PlanDB::get_plan" << endl;
 
 	State state_obj;
 
-	if (m_adversary_map.size() != 0 && populate_state_obj(config, oldPredictions, newPredictions, state_obj)) {
-		unsigned long state = get_state(state_obj);
+	if (m_adversary_map.size() != 0 && populate_state_obj(config, oldPredictions, newPredictions, state_obj, errorTolerance)) {
+        /*cout << "PlanDB::get_plan state found = " << endl;
+        cout << "state.timestep = " << state_obj.timestep << endl;
+        cout << "state.altitude = " << state_obj.altitude << endl;
+        cout << "state.formation = " << state_obj.formation << endl;
+        cout << "state.ecm = " << state_obj.ecm << endl;
+        cout << "state.incAlt_state = " << state_obj.incAlt_state << endl;
+        cout << "state.decAlt_state = " << state_obj.decAlt_state << endl;
+        cout << "state.incAlt2_state = " << state_obj.incAlt2_state << endl;
+        cout << "state.decAlt2_state = " << state_obj.decAlt2_state << endl;
+        cout << "state.targetDetected = " << state_obj.targetDetected << endl;
+        cout << "state.ecmOn_go = " << state_obj.ecmOn_go << endl;
+        cout << "state.ecmOff_go = " << state_obj.ecmOff_go << endl;
+        cout << "state.goTight_go = " << state_obj.goTight_go << endl;
+        cout << "state.goLoose_go = " << state_obj.goLoose_go << endl;
+        cout << "state.ecmOn_used = " << state_obj.ecmOn_used << endl;
+        cout << "state.ecmOff_used = " << state_obj.ecmOff_used << endl;
+        cout << "state.incAlt_go = " << state_obj.incAlt_go << endl;
+        cout << "state.decAlt_go = " << state_obj.decAlt_go << endl;
+        cout << "state.incAlt2_go = " << state_obj.incAlt2_go << endl;
+        cout << "state.decAlt2_go = " << state_obj.decAlt2_go << endl;
+        cout << "state.clockstep = " << state_obj.clockstep << endl;*/
+		
+        unsigned long state = get_state(state_obj);
+
+        //cout << "state ID = " << state << endl;
 
 		if (debug) {
 			cout << "state hash = " << state << endl;
@@ -353,6 +408,7 @@ bool PlanDB::get_plan(const DartConfiguration* config,const pladapt::Environment
 			assert(itr != m_adversary_map.end());
 			unsigned long next_state = (*itr).second.first;
 			string tactic = get_tactic_str((*itr).second.second);
+            Plan tempPlan;
 
 			while (true) {
 				if ((*itr).second.second == TICK) {
@@ -360,8 +416,8 @@ bool PlanDB::get_plan(const DartConfiguration* config,const pladapt::Environment
 				}
 
 				if (tactic != "") {
-					if (debug) cout << "tactic = " << tactic << endl;
-					plan.push_back(tactic);
+					if (debug) cout << "PlanDB::get_plan tactic = " << tactic << endl;
+					tempPlan.push_back(tactic);
 				}
 
 				itr = m_adversary_map.find(next_state);
@@ -370,17 +426,23 @@ bool PlanDB::get_plan(const DartConfiguration* config,const pladapt::Environment
 				tactic = get_tactic_str((*itr).second.second);
 			}
 
-			// remove sufixes from tactic names (everything after after (and including) an underscore)
-	    for (auto& tacticName : plan) {
-	    	auto pos = tacticName.find('_');
-	    	if (pos != string::npos) {
-	    		tacticName.erase(pos);
-	    	}
-	    }
+			// remove sufixes from tactic names (everything after (and including) an underscore)
+	        for (auto& tacticName : tempPlan) {
+	    	    auto pos = tacticName.find('_');
+	    	    if (pos != string::npos) {
+                    //cout << "Cleaning up tactic = " << tacticName << endl;
+	    		    tacticName.erase(pos);
+                    //cout << "Cleaned up tactic = " << tacticName << endl;
+	    	    }
+
+                plan.push_back(tacticName);
+	        }
 
 			plan_found = true;
 		}
 	}
+
+    //cout << "plan_found = " << plan_found << endl;
 
 	return plan_found;
 }

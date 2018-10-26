@@ -28,9 +28,9 @@ using namespace std;
 namespace dart {
 namespace am2 {
 
-TargetSensor::TargetSensor(double range, double detectionFormationFactor)
-	: range(range),
-	  detectionFormationFactor(detectionFormationFactor),
+TargetSensor::TargetSensor(double range, double detectionFormationFactor, double ecmProb)
+	: range(range), 
+	  detectionFormationFactor(detectionFormationFactor), ecmProbability(ecmProb),
 	  randomGenerator(RandomSeed::getNextSeed())
 {
 }
@@ -45,7 +45,7 @@ double TargetSensor::getProbabilityOfDetection(const DartConfiguration& config) 
 
 	// ECM reduces the prob of detection
 	if (config.getEcm()) {
-		probOfDetection *= 0.25;
+		probOfDetection *= ecmProbability;
 	}
 
 	return probOfDetection;

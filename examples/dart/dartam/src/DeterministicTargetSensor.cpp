@@ -24,6 +24,12 @@
 namespace dart {
 namespace am2 {
 
+DeterministicTargetSensor::DeterministicTargetSensor(double range, double detectionFormationFactor, double ecmProb): TargetSensor(range, detectionFormationFactor, ecmProb)
+{
+}
+DeterministicTargetSensor::DeterministicTargetSensor(const unsigned int& i, const double& j) {
+}
+
 double DeterministicTargetSensor::getProbabilityOfDetection(const DartConfiguration& config) {
 	double effectiveRange = range;
 	if (config.getFormation() == DartConfiguration::Formation::TIGHT) {

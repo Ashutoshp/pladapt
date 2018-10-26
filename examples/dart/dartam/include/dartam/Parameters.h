@@ -36,10 +36,13 @@ struct LongRangeSensorParams {
 	double THREAT_SENSOR_FNR = 0.15;
 	double TARGET_SENSOR_FPR = 0.10;
 	double TARGET_SENSOR_FNR = 0.15;
+    double THREAT_ECM_PROBABILITY = 0.25;
+    double TARGET_ECM_PROBABILITY = 0.25;
 
 	unsigned OBSERVATION_HORIZON = 0;
 	int THREAT_OBSERVATIONS_PER_CYCLE = 4;
 	int TARGET_OBSERVATIONS_PER_CYCLE = 4;
+    double ERROR_TOLERANCE = 1.0;
 };
 
 
@@ -65,7 +68,7 @@ struct ConfigurationSpaceParams {
 struct AdaptationManagerParams {
 
 	std::string mgr = "sdpra"; /**< identifier for the adaptation manager to use */
-	std::string hpMode = "";
+	std::string hpMode = "fast";
 
 	/**
 	 * Period for the adaptation decision. It should be the time it takes for

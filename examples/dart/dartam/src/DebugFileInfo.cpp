@@ -22,7 +22,7 @@ DebugFileInfo::DebugFileInfo(const int seed, const string& parentDirectory, cons
     else if (mode == "cb") mMode = "Hybrid";
     else if (mode == "ml0") mMode = "Hybrid_IBL0";
     else if (mode == "ml1") mMode = "Hybrid_IBL1";
-    else if (mode == "slow") mMode = "Slow";
+    else if (mode == "so") mMode = "Slow";
     else if (mode == "fast") mMode = "Fast";
     else if (mode == "si") mMode = "SlowInstant";
     else assert(false);
@@ -33,7 +33,9 @@ DebugFileInfo::DebugFileInfo(const int seed, const string& parentDirectory, cons
 	if (mFoutP == NULL) {
 		cout << "Could not open log file  "
 				<< GetDebugFilePath() << endl;
-	}
+	} else {
+        //*mFoutP << "seed = " << mSeed << endl;
+    }
 }
 
 DebugFileInfo::~DebugFileInfo() {
@@ -56,13 +58,33 @@ DebugFileInfo* DebugFileInfo::getInstance(const int seed, const char* parentDir,
     return mDebugFileInfo;
 }
 
-void DebugFileInfo::write(const string& output) const {
-	*mFoutP << output << endl;
+void DebugFileInfo::write(const string& output, bool endLine) const {
+	*mFoutP << output;
+
+    if (endLine) *mFoutP << endl;
 }
 
-void DebugFileInfo::write(const int& output) const {
-	*mFoutP << output << endl;
+void DebugFileInfo::write(char output, bool endLine) const {
+    *mFoutP << output;
+
+    if (endLine) *mFoutP << endl;
 }
+
+void DebugFileInfo::write(unsigned output, bool endLine) const {
+    *mFoutP << output;
+
+    if (endLine) *mFoutP << endl;
+}
+
+void DebugFileInfo::writeEndLine() const {
+    *mFoutP << endl;
+}
+
+/*void DebugFileInfo::write(const int& output, bool endLine) const {
+	*mFoutP << output;
+
+    if (endLine) *mFoutP << endl;
+}*/
 
 void DebugFileInfo::closeWriter() {
 	delete mDebugFileInfo;

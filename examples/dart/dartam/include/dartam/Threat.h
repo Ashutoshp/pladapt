@@ -34,7 +34,7 @@ namespace am2 {
  */
 class Threat {
 public:
-	Threat(double range, double destructionFormationFactor);
+	Threat(double range, double destructionFormationFactor, double ecmProbability);
 	virtual ~Threat();
 
 	/**
@@ -55,6 +55,7 @@ public:
 protected:
 	double range;
 	double destructionFormationFactor;
+    double ecmProbability;
 	std::uniform_real_distribution<> uniform;
 	std::default_random_engine randomGenerator;
 };
