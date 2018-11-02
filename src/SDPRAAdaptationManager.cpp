@@ -49,7 +49,7 @@ void SDPRAAdaptationManager::initialize(std::shared_ptr<const ConfigurationManag
 }
 
 TacticList SDPRAAdaptationManager::evaluate(const Configuration& currentConfigObj, const EnvironmentDTMCPartitioned& envDTMC,
-        const UtilityFunction& utilityFunction, unsigned horizon) {
+        const UtilityFunction& utilityFunction, unsigned horizon, double destroyProbability, double detectionProbability) {
 
 	/* check if we need to adjust the horizon to the environment size */
 	if ((envDTMC.getNumberOfParts() - 1) < horizon) {

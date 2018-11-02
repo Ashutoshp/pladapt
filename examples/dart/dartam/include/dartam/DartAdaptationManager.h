@@ -124,7 +124,7 @@ public:
 	/**
 	 * Make adaptation decisions based on the latest monitoring information
 	 */
-	pladapt::TacticList decideAdaptation(const DartMonitoringInfo& monitoringInfo);
+	pladapt::TacticList decideAdaptation(const DartMonitoringInfo& monitoringInfo, double destroyProbability, double detectionProbability);
 
     /**
      * Returns true if the evaluate() computes a full strategy

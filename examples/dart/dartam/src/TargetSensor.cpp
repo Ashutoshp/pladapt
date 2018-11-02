@@ -22,6 +22,7 @@
 #include <dartam/TargetSensor.h>
 #include <algorithm>
 #include <dartam/RandomSeed.h>
+#include <iostream>
 
 using namespace std;
 
@@ -43,10 +44,21 @@ double TargetSensor::getProbabilityOfDetection(const DartConfiguration& config) 
 			((config.getFormation() == DartConfiguration::Formation::LOOSE) ? 1.0 : 1 / detectionFormationFactor)
 			* max(0.0, range - (config.getAltitudeLevel() + 1)) / range; // +1 because level 0 is one level above ground
 
+    //std::cout << "config.getFormation() = " << config.getFormation() << std::endl;
+    //std::cout << "detectionFormationFactor = " << detectionFormationFactor << std::endl;
+    //std::cout << "range = " << range << endl;
+    //std::cout << "config.getAltitudeLevel() = " << config.getAltitudeLevel() << std::endl;
+    //std::cout << "config.getFormation() == DartConfiguration::Formation::LOOSE = " 
+    //        << (config.getFormation() == DartConfiguration::Formation::LOOSE) << std::endl;
+    //std::cout << "max(0.0, range - (config.getAltitudeLevel() + 1)) = " 
+    //        << max(0.0, range - (config.getAltitudeLevel() + 1)) << std::endl;
+
 	// ECM reduces the prob of detection
 	if (config.getEcm()) {
 		probOfDetection *= ecmProbability;
 	}
+
+    //cout << "Threat::getProbabilityOfDestruction probOfDetection = " << probOfDetection << endl;
 
 	return probOfDetection;
 //	return (config.getAltitudeLevel() + 1 <= sensorRange) ? 1.0 : 0.0;

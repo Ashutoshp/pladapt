@@ -267,6 +267,9 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 		targetProb = envValue.getComponent(0).asDouble();
 		threatProb = envValue.getComponent(1).asDouble();
 
+        //cout << "targetProb = " << targetProb << endl;
+        //cout << "threatProb = " << threatProb << endl;
+
 		// Compute the L1 distance of the predicted probabilities from the current
 		double distanceL1 = (abs(threatProb - currentThreatProb) + abs(targetProb - currentTargetProb));
         //cout << "PlanDB::populate_state_obj distanceL1 = " << distanceL1 << endl;
@@ -308,7 +311,7 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 	state.incAlt2_go = true;
 	state.decAlt2_go = true;
 	state.clockstep = 0;
-        
+
     /*cout << "state.timestep = " << state.timestep << endl;
     cout << "state.altitude = " << state.altitude << endl;
     cout << "state.formation = " << state.formation << endl;

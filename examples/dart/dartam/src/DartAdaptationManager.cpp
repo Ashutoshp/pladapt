@@ -162,7 +162,7 @@ void DartAdaptationManager::initialize(const Params& params, std::unique_ptr<pla
 }
 
 pladapt::TacticList DartAdaptationManager::decideAdaptation(
-        const DartMonitoringInfo& monitoringInfo) {
+        const DartMonitoringInfo& monitoringInfo, double destroyProbability, double detectionProbability) {
 
 	/* update environment */
 	pEnvThreatMonitor->update(monitoringInfo.threatSensing);
@@ -176,7 +176,8 @@ pladapt::TacticList DartAdaptationManager::decideAdaptation(
 
 	/* make adaptation decision */
 	//adaptMgr->setDebug(monitoringInfo.position.x == 4);
-	pladapt::TacticList tacticList = adaptMgr->evaluate(convertToDiscreteConfiguration(monitoringInfo), jointEnv, *pUtilityFunction, params.adaptationManager.HORIZON);
+	pladapt::TacticList tacticList = adaptMgr->evaluate(convertToDiscreteConfiguration(monitoringInfo),
+            jointEnv, *pUtilityFunction, params.adaptationManager.HORIZON, destroyProbability, detectionProbability);
     // Ashutosh TODO. I added cleanupModel API. But in sdp mode model* dir is deleted which is needed for debugging.
     // Check if we need to cleanup or not.
     adaptMgr->cleanupModel();

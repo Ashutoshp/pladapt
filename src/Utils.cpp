@@ -90,42 +90,124 @@ DumpPlanningProblems::~DumpPlanningProblems() {
 }
 
 void DumpPlanningProblems::writeHeader(ofstream& fout) {
-    fout << "Seed" << "," << "altitude"
-            << "," << "formation"
-            << "," << "ecm"
-            << "," << "ecmOn_used"
-            << "," << "ecmOn_go"
-            << "," << "ecmOff_used"
-            << "," << "ecmOff_go"
-            << "," << "goTight_used"
-            << "," << "goTight_go"
-            << "," << "goLoose_used"
-            << "," << "goLoose_go"
-            << "," << "incAlt_state"
-            << "," << "incAlt_go"
-            << "," << "decAlt_state"
-            << "," << "decAlt_go"
-            << "," << "incAlt2_state"
-            << "," << "incAlt2_go"
-            << "," << "decAlt2_state"
-            << "," << "decAlt2_go"
-            << "," << "satisfied"
-            << "," << "targetDetected"
-			<< "," << "envState"
-            /*<< "," << "RA 9"
-            << "," << "RA 10"
-            << "," << "RA 11"
-            << "," << "RA 12"
-            << "," << "RA 13"
-            << "," << "RA 14"
-            << "," << "RA 15"
-            << "," << "RA 16"
-            << "," << "RA 17"
-            << "," << "RA 18"
-            << "," << "RA 19"
-            << "," << "RA 20"
-            << "," << "Predicted"*/
-            << "," << "Use Reactive"
+    fout << "Seed"
+            << ", " << "Directory" 
+            << ", " << "altitude"
+            << ", " << "formation"
+            << ", " << "ecm"
+            //<< "," << "ecmOn_used"
+            //<< "," << "ecmOn_go"
+            //<< "," << "ecmOff_used"
+            //<< "," << "ecmOff_go"
+            //<< "," << "goTight_used"
+            //<< "," << "goTight_go"
+            //<< "," << "goLoose_used"
+            //<< "," << "goLoose_go"
+            << ", " << "incAlt_state"
+            //<< "," << "incAlt_go"
+            << ", " << "decAlt_state"
+            //<< "," << "decAlt_go"
+            << ", " << "incAlt2_state"
+            //<< "," << "incAlt2_go"
+            << ", " << "decAlt2_state"
+            //<< "," << "decAlt2_go"
+            //<< "," << "satisfied"
+            //<< "," << "targetDetected"
+			//<< "," << "envState"
+            << ", " << "TR1"
+            << ", " << "TH1"
+            << ", " << "TR2"
+            << ", " << "TH2"
+            << ", " << "TR3"
+            << ", " << "TH3"
+            << ", " << "TR4"
+            << ", " << "TH4"
+            << ", " << "TR5"
+            << ", " << "TH5"
+            << ", " << "TR6"
+            << ", " << "TH6"
+            << ", " << "TR7"
+            << ", " << "TH7"
+            << ", " << "TR8"
+            << ", " << "TH8"
+            << ", " << "TR9"
+            << ", " << "TH9"
+            << ", " << "TR10"
+            << ", " << "TH10"
+            << ", " << "TR11"
+            << ", " << "TH11"
+            << ", " << "TR12"
+            << ", " << "TH12"
+            << ", " << "TR13"
+            << ", " << "TH13"
+            << ", " << "TR14"
+            << ", " << "TH14"
+            << ", " << "TR15"
+            << ", " << "TH15"
+            << ", " << "TR16"
+            << ", " << "TH16"
+            << ", " << "TR17"
+            << ", " << "TH17"
+            << ", " << "TR18"
+            << ", " << "TH18"
+            << ", " << "TR19"
+            << ", " << "TH19"
+            << ", " << "TR20"
+            << ", " << "TH20"
+            << ", " << "TR21"
+            << ", " << "TH21"
+            << ", " << "TR22"
+            << ", " << "TH22"
+            << ", " << "TR23"
+            << ", " << "TH23"
+            << ", " << "TR24"
+            << ", " << "TH24"
+            << ", " << "TR25"
+            << ", " << "TH25"
+            << ", " << "TR26"
+            << ", " << "TH26"
+            << ", " << "TR27"
+            << ", " << "TH27"
+            << ", " << "TR28"
+            << ", " << "TH28"
+            << ", " << "TR29"
+            << ", " << "TH29"
+            << ", " << "TR30"
+            << ", " << "TH30"
+            << ", " << "TR31"
+            << ", " << "TH31"
+            << ", " << "TR32"
+            << ", " << "TH32"
+            << ", " << "TR33"
+            << ", " << "TH33"
+            << ", " << "TR34"
+            << ", " << "TH34"
+            << ", " << "TR35"
+            << ", " << "TH35"
+            << ", " << "TR36"
+            << ", " << "TH36"
+            << ", " << "TR37"
+            << ", " << "TH37"
+            << ", " << "TR38"
+            << ", " << "TH38"
+            << ", " << "TR39"
+            << ", " << "TH39"
+            << ", " << "TR40"
+            << ", " << "TH40"
+            << ", " << "TR41"
+            << ", " << "TH41"
+            << ", " << "TR42"
+            << ", " << "TH42"
+            << ", " << "TR43"
+            << ", " << "TH43"
+            << ", " << "TR44"
+            << ", " << "TH44"
+            << ", " << "TR45"
+            << ", " << "TH45"
+            << ", " << "TR46"
+            << ", " << "TH46"
+            //<< "," << "Predicted"
+            << ", " << "Use Reactive"
             << "\n";
 }
 
@@ -164,37 +246,22 @@ void DumpPlanningProblems::copyFileFromSlow(const string& source, const string& 
 }
 
 
-void DumpPlanningProblems::writeInitialStateVariables(ofstream& fout, const State& currentState) {
+void DumpPlanningProblems::writeInitialStateVariables(ofstream& fout, const DartConfiguration* config) {
     //cout << "DumpPlanningProblems::writeInitialStateVariables" << endl;
-	fout << "," << currentState.altitude
-			<< "," << currentState.formation
-			<< "," << currentState.ecm
-			<< "," << currentState.ecmOn_used
-			<< "," << currentState.ecmOn_go
-			<< "," << currentState.ecmOff_used
-			<< "," << currentState.ecmOff_go
-			<< "," << currentState.goTight_used
-			<< "," << currentState.goTight_go
-			<< "," << currentState.goLoose_used
-			<< "," << currentState.goLoose_used
-			<< "," << currentState.incAlt_state
-			<< "," << currentState.incAlt_go
-			<< "," << currentState.decAlt_state
-			<< "," << currentState.decAlt_go
-			<< "," << currentState.incAlt2_state
-			<< "," << currentState.incAlt2_go
-			<< "," << currentState.decAlt2_state
-			<< "," << currentState.decAlt2_go
-			<< "," << currentState.satisfied
-			<< "," << currentState.targetDetected
-			<< "," << currentState.env_state;
+    fout << ", " << config->getAltitudeLevel()
+         << ", " << config->getFormation()
+         << ", " << config->getEcm()
+         << ", " << config->getTtcIncAlt()
+         << ", " << config->getTtcDecAlt()
+         << ", " << config->getTtcIncAlt2()
+         << ", " << config->getTtcDecAlt2();
 }
 
 void DumpPlanningProblems::writeData(const string& destinationDir,
         const string& reactivePlanDir,
         const string& deliberativePlanDir,
-        const State& currentState,
-        const string& envModel,
+        const DartConfiguration* config,
+        const pladapt::EnvironmentDTMCPartitioned* envModel,
         double classifierLabel) {
 
     static bool headerWritten = false;
@@ -216,15 +283,16 @@ void DumpPlanningProblems::writeData(const string& destinationDir,
             //<< "," << deliberativePlanDir;
 
     // Add initial state variables
-    writeInitialStateVariables(fout, currentState);
+    writeInitialStateVariables(fout, config);
 
-    // Now add arrival rates
-    /*std::vector<double>::const_iterator itr = envModel.begin();
+    // Add target and threat probabilities.
+    for (unsigned s = 0; s < envModel->getNumberOfStates(); ++s) {
+		const auto& envValue = envModel->getStateValue(s);
+		unsigned targetProb = envValue.getComponent(0).asDouble();
+		unsigned threatProb = envValue.getComponent(1).asDouble();
 
-    while (itr != envModel.end()) {
-        fout << "," << *itr;
-        ++itr;
-    }*/
+        fout << ", " << targetProb << ", " << threatProb;
+    }
 
     //fout << "," << classifierLabel;
     fout << endl;
@@ -236,8 +304,8 @@ void DumpPlanningProblems::writeData(const string& destinationDir,
 void DumpPlanningProblems::copySampleProblems(
         const string& reactivePlanDir,
         const string& deliberativePlanDir,
-        const State& currentState,
-        const string& envModel,
+        const DartConfiguration* config,
+        const pladapt::EnvironmentDTMCPartitioned* envModel,
         double classifierLabel) {
     // Create parent directory
     //char tempDirTemplate[] = "modelXXXXXX";
@@ -262,7 +330,7 @@ void DumpPlanningProblems::copySampleProblems(
     copyFileFromSlow(deliberativePlanDir, slowPath);
 
     // Write features
-    writeData(path, reactivePlanDir, deliberativePlanDir, currentState, envModel, classifierLabel);
+    writeData(path, reactivePlanDir, deliberativePlanDir, config, envModel, classifierLabel);
 }
 
 namespace pladapt {

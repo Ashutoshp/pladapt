@@ -41,7 +41,7 @@ void PMCAdaptationManager::initialize(std::shared_ptr<const ConfigurationManager
 }
 
 TacticList PMCAdaptationManager::evaluate(const Configuration& currentConfigObj, const EnvironmentDTMCPartitioned& envDTMC,
-    		const UtilityFunction& utilityFunction, unsigned horizon) {
+    		const UtilityFunction& utilityFunction, unsigned horizon, double destroyProbability, double detectionProbability) {
 
 	/* check if we need to adjust the horizon to the environment size */
 	if ((envDTMC.getNumberOfParts() - 1) < horizon) {
@@ -51,7 +51,7 @@ TacticList PMCAdaptationManager::evaluate(const Configuration& currentConfigObj,
 		}
 	}
 
-	string initialState = pMcHelper->generateInitializations(currentConfigObj, utilityFunction, horizon);
+	string initialState = pMcHelper->generateInitializations(currentConfigObj, utilityFunction, horizon, true);
 
     string environmentModel = generateEnvironmentDTMC(envDTMC);
 

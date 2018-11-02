@@ -33,7 +33,7 @@ public:
     void initialize(std::shared_ptr<const ConfigurationManager> configMgr, const YAML::Node& params);
 
     virtual TacticList evaluate(const Configuration& currentConfigObj, const EnvironmentDTMCPartitioned& envDTMC,
-            const UtilityFunction& utilityFunction, unsigned horizon);
+            const UtilityFunction& utilityFunction, unsigned horizon, double destroyProbability = 0, double detectionProbability = 0);
 
     virtual bool supportsStrategy() const;
     virtual std::shared_ptr<Strategy> getStrategy();

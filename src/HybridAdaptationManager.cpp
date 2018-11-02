@@ -62,7 +62,8 @@ void HybridAdaptationManager::initialize(std::shared_ptr<const pladapt::Configur
 pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configuration& currentConfigObj,
                                                         const pladapt::EnvironmentDTMCPartitioned& envDTMC,
                                                         const pladapt::UtilityFunction& utilityFunction,
-                                                        unsigned horizon) {
+                                                        unsigned horizon, double destroyProbability,
+                                                        double detectionProbability) {
 
 	// QUESTION: Is it possible for the model to be open at this point but not #drew
 	//  be loaded into the PlanDB? If so it needs to be accounted for here
@@ -131,17 +132,22 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
         // command line params 
 
 		double classifierLabel = -1;
-		string envModel = "";
 
         // Check threat level
         cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
+        cout << "Destroy Probability = " << destroyProbability << endl;
+        cout << "Detection Probability = " << detectionProbability << endl;
+        
         DebugFileInfo::getInstance()->write("Threat range:" + std::to_string(dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange));
+
         if (hpMode == PG 
-                || (hpMode == CB
-                		&& adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange)) {
+                || (hpMode == CB && destroyProbability >= 0.6)) {
+                		//&& adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange)) {
             if (hpMode == CB) {
                 DebugFileInfo::getInstance()->write("In danger: ");
                 cout << "In danger: ";
+                DebugFileInfo::getInstance()->write("Destroy Probability = " + to_string(destroyProbability));
+                DebugFileInfo::getInstance()->write("Detection Probability = " + to_string(detectionProbability));
             }
 
             cout << "Fast Planning Triggered" << endl;
@@ -166,8 +172,8 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
                 int seed = DebugFileInfo::getInstance()->getSimulationSeed();
 
                 DumpPlanningProblems::get_instance(pathToStoreProfilingProblems, seed)
-                                    ->copySampleProblems(fastPlanPath, slowPlanPath, currentState,
-                                            envModel, classifierLabel);
+                                    ->copySampleProblems(fastPlanPath, slowPlanPath, &adjustedConfig,
+                                            &envDTMC, classifierLabel);
             }
         } else {
             cout << "Safe: Waiting for plan" << endl;

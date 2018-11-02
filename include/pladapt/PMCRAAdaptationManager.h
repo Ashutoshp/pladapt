@@ -50,7 +50,7 @@ public:
      void initialize(std::shared_ptr<const ConfigurationManager> configMgr, const YAML::Node& params,
      		std::shared_ptr<const PMCHelper> helper) override;
      TacticList evaluate(const Configuration& currentConfigObj, const EnvironmentDTMCPartitioned& envDTMC,
-            const UtilityFunction& utilityFunction, unsigned horizon) override;
+            const UtilityFunction& utilityFunction, unsigned horizon, double destroyProbability = 0, double detectionProbability = 0) override;
 
 protected:
     double survivalRequirement = 1.0;

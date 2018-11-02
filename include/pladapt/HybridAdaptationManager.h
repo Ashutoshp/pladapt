@@ -53,7 +53,7 @@ virtual void initialize(std::shared_ptr<const pladapt::ConfigurationManager> con
                         std::shared_ptr<const DartPMCHelper> helper);
 virtual pladapt::TacticList evaluate(const pladapt::Configuration& currentConfigObj,
             const pladapt::EnvironmentDTMCPartitioned& envDTMC,
-            const pladapt::UtilityFunction& utilityFunction, unsigned horizon);
+            const pladapt::UtilityFunction& utilityFunction, unsigned horizon, double destroyProbability, double detectionProbability);
 virtual void cleanupModel() const;
 
 std::string generateEnvironmentDTMC(const pladapt::EnvironmentDTMCPartitioned& envDTMC);

@@ -45,13 +45,24 @@ double Threat::getProbabilityOfDestruction(const DartConfiguration& config) {
 			((config.getFormation() == DartConfiguration::Formation::LOOSE) ? 1.0 : (1.0 / destructionFormationFactor))
 			* max(0.0, range - (config.getAltitudeLevel() + 1)) / range; // +1 because level 0 is one level above ground
 
+    //std::cout << "config.getFormation() = " << config.getFormation() << std::endl;
+    /*std::cout << "destructionFormationFactor = " << destructionFormationFactor << std::endl;
+    std::cout << "range = " << range << endl;
+    std::cout << "config.getAltitudeLevel() = " << config.getAltitudeLevel() << std::endl;
+    std::cout << "config.getFormation() == DartConfiguration::Formation::LOOSE = " 
+            << (config.getFormation() == DartConfiguration::Formation::LOOSE) << std::endl;
+    std::cout << "max(0.0, range - (config.getAltitudeLevel() + 1)) = " 
+            << max(0.0, range - (config.getAltitudeLevel() + 1)) << std::endl;
+
+    std::cout << "config.getEcm() = " << config.getEcm() << std::endl;*/
+
     //cout << "### Threat::getProbabilityOfDestruction probOfDestruction = " << probOfDestruction << endl;
 	// ECM reduces the prob of destruction
 	if (config.getEcm()) {
 		probOfDestruction *= ecmProbability;
 	}
 
-   //cout << "Threat::getProbabilityOfDestruction probOfDestruction = " << probOfDestruction << endl;
+    //cout << "Threat::getProbabilityOfDestruction probOfDestruction = " << probOfDestruction << endl;
 	return probOfDestruction;
 //	return (config.getAltitudeLevel() + 1 <= threatRange) ? 1.0 : 0.0;
 }

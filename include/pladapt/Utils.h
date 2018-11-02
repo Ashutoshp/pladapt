@@ -24,7 +24,10 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include <pladapt/State.h>
+//#include <dartam/DartConfiguration.h>
+//#include <pladapt/State.h>
+#include <pladapt/EnvironmentDTMCPartitioned.h>
+#include "../examples/dart/dartam/include/dartam/DartConfiguration.h"
 
 namespace pladapt {
 /**
@@ -82,16 +85,16 @@ public:
     void copySampleProblems(
             const string& reactivePlanDir,
             const string& deliberativePlanDir,
-            const State& currentState,
-            const string& arrivalRates,
+            const DartConfiguration* config,
+            const pladapt::EnvironmentDTMCPartitioned* envModel,
 			double classifierLabel);
 
     void copyFileFromFast(const string& source, const string& destination);
     void copyFileFromSlow(const string& source, const string& destination);
-    void writeInitialStateVariables(ofstream& fout, const State& currentState);
+    void writeInitialStateVariables(ofstream& fout, const DartConfiguration* config);
     void writeData(const string& destinationDir, const string& reactivePlanDir,
-            const string& deliberativePlanDir, const State& currentState,
-            const string& arrivalRates, double classifierLabel);
+            const string& deliberativePlanDir, const DartConfiguration* config,
+            const pladapt::EnvironmentDTMCPartitioned* envDTMC, double classifierLabel);
 
     ~DumpPlanningProblems();
 };

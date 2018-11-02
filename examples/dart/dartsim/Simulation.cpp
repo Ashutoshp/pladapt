@@ -280,7 +280,11 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 			/* invoke adaptation manager */
 			auto startTime = myclock::now();
             //cout << "Calling decideAdaptation" << endl;
-			tactics = adaptMgr.decideAdaptation(monitoringInfo);
+            //bool threat = threatEnv.isObjectAt(location);
+            //bool target = targetEnv.isObjectAt(position);
+            double destroyProbability = pThreatSim->getProbabilityOfDestruction(currentConfig);
+            double detectionProbability = pTargetSensor->getProbabilityOfDetection(currentConfig);
+			tactics = adaptMgr.decideAdaptation(monitoringInfo, destroyProbability, detectionProbability);
 			auto delta = myclock::now() - startTime;
 			double deltaMsec = chrono::duration_cast<chrono::duration<double, std::milli>>(delta).count();
 
@@ -434,7 +438,7 @@ SimulationResults Simulation::run(const SimulationParams& simParams, const Param
 	results.destroyed = destroyed;
 	results.targetsDetected = targetsDetected;
 	results.whereDestroyed = position;
-	results.missionSuccess = !destroyed && targetsDetected >= simParams.scenario.TARGETS / 4.0;
+	results.missionSuccess = !destroyed && targetsDetected >= simParams.scenario.TARGETS / 2.0;
 	results.decisionTimeAvg = boost::accumulators::mean(decisionTimeStats);
 	results.decisionTimeVar = boost::accumulators::moment<2>(decisionTimeStats);
 	results.numQuickDecisions = numQuickDecisions;
