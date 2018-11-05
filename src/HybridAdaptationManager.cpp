@@ -105,7 +105,11 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 
 		// Generate PRISM initialization strings
 		const string initialState = pMcHelper->generateInitializations(currentConfigObj, utilityFunction, horizon);
-		const string environmentModel = generateEnvironmentDTMC(envDTMC);
+		string environmentModel = generateEnvironmentDTMC(envDTMC);
+
+        if (hpMode == PG) {
+            environmentModel += string("// #ENV ENDS\n");            
+        }
 
 		string templatePath = params[TEMPLATE_PATH].as<string>();
 		if (params[NO_LATENCY].as<bool>()) {
