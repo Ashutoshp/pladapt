@@ -264,8 +264,8 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 
 	for (unsigned s = 0; s < oldPredictions->getNumberOfStates(); s++) {
 		const auto& envValue = oldPredictions->getStateValue(s);
-		targetProb = envValue.getComponent(0).asDouble();
-		threatProb = envValue.getComponent(1).asDouble();
+		threatProb = envValue.getComponent(0).asDouble();
+		targetProb = envValue.getComponent(1).asDouble();
 
         //cout << "targetProb = " << targetProb << endl;
         //cout << "threatProb = " << threatProb << endl;
@@ -342,7 +342,7 @@ bool PlanDB::populate_state_obj(const DartConfiguration* config,
 		state.env_state = it->second;
 
 		unsigned long stateNum = get_state(state);
-		if(stateNum != ULONG_MAX){
+		if(stateNum != ULONG_MAX) {
 			valid_state = true;
             //cout << "*************** Valid State Found ***************" << endl;
             //cout << "PlanDB::populate_state_obj state_str = " << state.get_state_str() << endl;

@@ -86,7 +86,8 @@ public:
             const string& reactivePlanDir,
             const string& deliberativePlanDir,
             const DartConfiguration* config,
-            const pladapt::EnvironmentDTMCPartitioned* envModel,
+            const std::vector<double>& targetPredictions,
+            const std::vector<double>& threatPredictions,
 			double classifierLabel);
 
     void copyFileFromFast(const string& source, const string& destination);
@@ -94,7 +95,8 @@ public:
     void writeInitialStateVariables(ofstream& fout, const DartConfiguration* config);
     void writeData(const string& destinationDir, const string& reactivePlanDir,
             const string& deliberativePlanDir, const DartConfiguration* config,
-            const pladapt::EnvironmentDTMCPartitioned* envDTMC, double classifierLabel);
+            const std::vector<double>& targetPredictions, 
+            const std::vector<double>& threatPredictions, double classifierLabel);
 
     ~DumpPlanningProblems();
 };

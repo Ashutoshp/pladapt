@@ -56,7 +56,8 @@ virtual pladapt::TacticList evaluate(const pladapt::Configuration& currentConfig
             const pladapt::UtilityFunction& utilityFunction, unsigned horizon, double destroyProbability, double detectionProbability);
 virtual void cleanupModel() const;
 
-std::string generateEnvironmentDTMC(const pladapt::EnvironmentDTMCPartitioned& envDTMC);
+std::string generateEnvironmentDTMC(const pladapt::EnvironmentDTMCPartitioned& envDTMC,
+                std::vector<double>& targetPredictions, std::vector<double>& threatPredictions);
 
 unsigned getDeliberativeFailedCount() const {return deliberativeFailedCount;}
 unsigned getReactivePlanningCount() const {return reactivePlanningCount;}

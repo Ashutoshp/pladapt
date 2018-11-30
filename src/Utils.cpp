@@ -85,8 +85,6 @@ DumpPlanningProblems::DumpPlanningProblems(const string& location, const int see
 }
 
 DumpPlanningProblems::~DumpPlanningProblems() {
-
-
 }
 
 void DumpPlanningProblems::writeHeader(ofstream& fout) {
@@ -261,7 +259,8 @@ void DumpPlanningProblems::writeData(const string& destinationDir,
         const string& reactivePlanDir,
         const string& deliberativePlanDir,
         const DartConfiguration* config,
-        const pladapt::EnvironmentDTMCPartitioned* envModel,
+        const std::vector<double>& targetPredictions,
+        const std::vector<double>& threatPredictions,
         double classifierLabel) {
 
     static bool headerWritten = false;
@@ -285,13 +284,22 @@ void DumpPlanningProblems::writeData(const string& destinationDir,
     // Add initial state variables
     writeInitialStateVariables(fout, config);
 
+    std::vector<double>::const_iterator itr1 = targetPredictions.begin();
+    std::vector<double>::const_iterator itr2 = threatPredictions.begin();
+    
     // Add target and threat probabilities.
-    for (unsigned s = 0; s < envModel->getNumberOfStates(); ++s) {
+    /*for (unsigned s = 0; s < envModel->getNumberOfStates(); ++s) {
 		const auto& envValue = envModel->getStateValue(s);
 		unsigned targetProb = envValue.getComponent(0).asDouble();
 		unsigned threatProb = envValue.getComponent(1).asDouble();
 
         fout << ", " << targetProb << ", " << threatProb;
+    }*/
+
+    while (itr1 != targetPredictions.end()) {
+        fout << ", " << *itr1 << ", " << *itr2;
+        ++itr1;
+        ++itr2;
     }
 
     //fout << "," << classifierLabel;
@@ -305,7 +313,8 @@ void DumpPlanningProblems::copySampleProblems(
         const string& reactivePlanDir,
         const string& deliberativePlanDir,
         const DartConfiguration* config,
-        const pladapt::EnvironmentDTMCPartitioned* envModel,
+        const std::vector<double>& targetPredictions,
+        const std::vector<double>& threatPredictions,
         double classifierLabel) {
     // Create parent directory
     //char tempDirTemplate[] = "modelXXXXXX";
@@ -330,7 +339,8 @@ void DumpPlanningProblems::copySampleProblems(
     copyFileFromSlow(deliberativePlanDir, slowPath);
 
     // Write features
-    writeData(path, reactivePlanDir, deliberativePlanDir, config, envModel, classifierLabel);
+    writeData(path, reactivePlanDir, deliberativePlanDir, config, 
+            targetPredictions, threatPredictions, classifierLabel);
 }
 
 namespace pladapt {

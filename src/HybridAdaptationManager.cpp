@@ -105,7 +105,21 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 
 		// Generate PRISM initialization strings
 		const string initialState = pMcHelper->generateInitializations(currentConfigObj, utilityFunction, horizon);
-		string environmentModel = generateEnvironmentDTMC(envDTMC);
+
+		std::vector<double> targetPredictions;
+		std::vector<double> threatPredictions;
+
+        string environmentModel = generateEnvironmentDTMC(envDTMC, targetPredictions, threatPredictions);
+
+        std::vector<double>::iterator itr1 = targetPredictions.begin();
+        std::vector<double>::iterator itr2 = threatPredictions.begin();
+        unsigned i = 1;
+
+        /*while (itr1 != targetPredictions.end()) {
+            cout << i << " Target = " << *itr1 << "    Threat = " << *itr2 << endl;
+            ++itr1; ++itr2; ++i;
+        }*/
+
 
         if (hpMode == PG) {
             environmentModel += string("// #ENV ENDS\n");            
@@ -141,12 +155,12 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
         cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
         cout << "Destroy Probability = " << destroyProbability << endl;
         cout << "Detection Probability = " << detectionProbability << endl;
-        
+
         DebugFileInfo::getInstance()->write("Threat range:" + std::to_string(dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange));
 
         if (hpMode == PG 
-                || (hpMode == CB && destroyProbability >= 0.6)) {
-                		//&& adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange)) {
+                //|| (hpMode == CB && destroyProbability >= 0.6)) {
+                && adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange) {
             if (hpMode == CB) {
                 DebugFileInfo::getInstance()->write("In danger: ");
                 cout << "In danger: ";
@@ -177,7 +191,7 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 
                 DumpPlanningProblems::get_instance(pathToStoreProfilingProblems, seed)
                                     ->copySampleProblems(fastPlanPath, slowPlanPath, &adjustedConfig,
-                                            &envDTMC, classifierLabel);
+                                            targetPredictions, threatPredictions, classifierLabel);
             }
         } else {
             cout << "Safe: Waiting for plan" << endl;
@@ -217,6 +231,7 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
     } else {
         DebugFileInfo::getInstance()->writeEndLine();
     }
+    //assert(false);
 
     return tactics;
 }
@@ -241,7 +256,8 @@ void HybridAdaptationManager::cleanupModel() const {
 const string STATE_VAR = "s";
 const string GUARD = "[tick] ";
 
-std::string HybridAdaptationManager::generateEnvironmentDTMC(const pladapt::EnvironmentDTMCPartitioned& envDTMC) {
+std::string HybridAdaptationManager::generateEnvironmentDTMC(const pladapt::EnvironmentDTMCPartitioned& envDTMC,
+        std::vector<double>& targetPredictions, std::vector<double>& threatPredictions) {
 	const string STATE_VALUE_FORMULA = "formula stateValue";
 
 	string result;
@@ -254,6 +270,8 @@ std::string HybridAdaptationManager::generateEnvironmentDTMC(const pladapt::Envi
 		if (c > 0) {
 			stateValueFormulas[c] << c;
 		}
+        //cout << "##### " << (stateValueFormulas[c]).str() << endl;
+
 		stateValueFormulas[c] << " = ";
 	}
 
@@ -266,6 +284,16 @@ std::string HybridAdaptationManager::generateEnvironmentDTMC(const pladapt::Envi
 			}
 			stateValueFormulas[c] << "(" << STATE_VAR << " = " << s << " ? "
 			                      << envValue.getComponent(c).asDouble() << " : 0)";
+
+            if (c == 0) {
+                // Threats
+                threatPredictions.push_back(envValue.getComponent(c).asDouble());
+            } else if (c == 1) {
+                // Targets
+                targetPredictions.push_back(envValue.getComponent(c).asDouble());
+            } else {
+                assert(false);
+            }
 		}
 	}
 
@@ -299,6 +327,30 @@ std::string HybridAdaptationManager::generateEnvironmentDTMC(const pladapt::Envi
 			out << ';' << endl;
 		}
 	}
+
+    assert(targetPredictions.size() == threatPredictions.size() && threatPredictions.size() == 46);
+    double arr[] = {    0.0,
+                        0.034225, 0.11655, 0.034225, 0.11655, 0.3969, 0.11655, 0.034225, 0.11655, 0.034225,
+                        0.034225, 0.11655, 0.034225, 0.11655, 0.3969, 0.11655, 0.034225, 0.11655, 0.034225,        
+                        0.034225, 0.11655, 0.034225, 0.11655, 0.3969, 0.11655, 0.034225, 0.11655, 0.034225,        
+                        0.034225, 0.11655, 0.034225, 0.11655, 0.3969, 0.11655, 0.034225, 0.11655, 0.034225,        
+                        0.034225, 0.11655, 0.034225, 0.11655, 0.3969, 0.11655, 0.034225, 0.11655, 0.034225,        
+                    };
+
+    std::vector<double>::iterator itr1 = targetPredictions.begin();
+    std::vector<double>::iterator itr2 = threatPredictions.begin();
+    unsigned index = 0;
+
+
+    while (itr1 != targetPredictions.end()) {
+        *itr1 = (*itr1) * (arr[index]);
+        *itr2 = (*itr2) * (arr[index]);
+        ++itr1;
+        ++itr2;
+        ++index;
+    }
+
+    assert(index == 46);
 
 	out << "endmodule" << endl;
 
