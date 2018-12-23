@@ -41,7 +41,9 @@ class DBWrapper:
  
         # Open the same file to compare with itself
         db_csvfile = open(self.__db_file, 'r')
-
+        ignore_not_use_reactive_problems = ProblemDatabase()
+        ignore_use_reactive_problems = ProblemDatabase()
+        ignore_use_either_problems = ProblemDatabase()
         #print (db_csvfile)
 
         rows = 0
@@ -127,11 +129,20 @@ class DBWrapper:
                 self.__not_ignored_seed_problems.add_data(problemInstance)
 
             if label == 0:
-                self.__not_use_reactive_problems.add_data(problemInstance)
+                if (int(seed) in self.__ignore_seeds):
+                    ignore_not_use_reactive_problems.add_data(problemInstance)
+                else:
+                    self.__not_use_reactive_problems.add_data(problemInstance)
             elif label == 1:
-                self.__use_reactive_problems.add_data(problemInstance)
+                if (int(seed) in self.__ignore_seeds):
+                    ignore_use_reactive_problems.add_data(problemInstance)
+                else:
+                    self.__use_reactive_problems.add_data(problemInstance)
             elif label == 2:
-                self.__use_either_problems.add_data(problemInstance)
+                if (int(seed) in self.__ignore_seeds):
+                    ignore_use_either_problems.add_data(problemInstance)
+                else:
+                    self.__use_either_problems.add_data(problemInstance)
             else:
                 print("Error: label = ", label)
                 assert False
@@ -145,8 +156,11 @@ class DBWrapper:
         print("Number of ignored traces Problems = ", self.__ignored_seed_problems.get_db_size())
         print("Number of NOT ignored traces Problems = ", self.__not_ignored_seed_problems.get_db_size())
         print("Number of problems with not use_reactive = ", self.__not_use_reactive_problems.get_db_size())
-        print("Number of problems with use_reactive = ", self.__use_reactive_problems.get_db_size())
+        print("Number of problems with use_reactive = ", self.__use_either_problems.get_db_size())
         print("Number of problems with use_either = ", self.__use_either_problems.get_db_size())
+        print("Ignored number of problems with not use_reactive = ", ignore_not_use_reactive_problems.get_db_size())
+        print("Ignored number of problems with use_reactive = ", ignore_use_reactive_problems.get_db_size())
+        print("Ignored number of problems with use_either = ", ignore_use_either_problems.get_db_size())
 
         #assert(rows == len(self.__use_reactive_problems.get_db_size() + \
         #        self.__not_use_reactive_problems.get_db_size() + \

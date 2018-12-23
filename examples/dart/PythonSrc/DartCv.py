@@ -3,7 +3,8 @@ import sys
 #from ProblemDatabase import ProblemFeatures
 #from ProblemDatabase import ProblemDatabase
 #from ProblemDatabase import ProblemInstance
-from DBWrapper import DartDBWrapper
+from sklearn.preprocessing import StandardScaler
+from DartDBWrapper import DBWrapper
 #from ProblemDatabase import *
 #from ProblemDB import *
 from sklearn.neighbors import KNeighborsClassifier
@@ -103,7 +104,8 @@ class CrossValidate:
                     'precision_weighted', 'recall_weighted', 'f1_weighted']
         #X_resampled, y_resampled = SMOTE().fit_resample(all_training_problems.get_features_list(), \
         #        all_training_problems.get_label_list())
-        X_resampled, y_resampled = ADASYN().fit_resample(all_training_problems.get_features_list(), \
+        features_list = StandardScaler().fit_transform(all_training_problems.get_features_list())
+        X_resampled, y_resampled = ADASYN().fit_resample(features_list, \
                 all_training_problems.get_label_list())
         #X_resampled, y_resampled = BorderlineSMOTE().fit_resample(all_training_problems.get_features_list(), \
         #            all_training_problems.get_label_list())
@@ -777,12 +779,15 @@ def test_mode_2(data_file, test_seeds):
     print("Label 1 count = ", test_problems.get_label_list().count(1))
     print("Label 2 count = ", test_problems.get_label_list().count(2))
 
-    X_resampled, y_resampled = SMOTE().fit_resample(train_problems.get_features_list(), \
+    features_list = StandardScaler().fit_transform(train_problems.get_features_list())
+    X_resampled, y_resampled = SMOTE().fit_resample(features_list, \
                 train_problems.get_label_list())
+    #X_resampled, y_resampled = SMOTE().fit_resample(train_problems.get_features_list(), \
+    #            train_problems.get_label_list())
 
     print("****** SMOTE *******")
     test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
-    test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
+    #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifierWeight")
@@ -792,12 +797,15 @@ def test_mode_2(data_file, test_seeds):
     test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
     
-    X_resampled, y_resampled = ADASYN().fit_resample(train_problems.get_features_list(), \
+    features_list = StandardScaler().fit_transform(train_problems.get_features_list())
+    X_resampled, y_resampled = ADASYN().fit_resample(features_list, \
                 train_problems.get_label_list())
+    #X_resampled, y_resampled = ADASYN().fit_resample(train_problems.get_features_list(), \
+    #            train_problems.get_label_list())
     
     print("****** ADASYN *******")
     test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
-    test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
+    #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifierWeight")
@@ -807,12 +815,15 @@ def test_mode_2(data_file, test_seeds):
     test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
     
-    X_resampled, y_resampled = BorderlineSMOTE().fit_resample(train_problems.get_features_list(), \
+    features_list = StandardScaler().fit_transform(train_problems.get_features_list())
+    X_resampled, y_resampled = BorderlineSMOTE().fit_resample(features_list, \
                 train_problems.get_label_list())
+    #X_resampled, y_resampled = BorderlineSMOTE().fit_resample(train_problems.get_features_list(), \
+    #            train_problems.get_label_list())
 
     print("****** BorderlineSMOTE *******")
     test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
-    test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
+    #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifierWeight")
@@ -841,7 +852,7 @@ def main():
     #print (sys.argv[0])
     print (sys.argv[1])
     #print (sys.argv[3])
-    test_mode = 3
+    test_mode = 2
     merge_labels = False
 
     #if (len(sys.argv) > 5):
