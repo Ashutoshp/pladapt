@@ -253,6 +253,9 @@ void DumpPlanningProblems::writeInitialStateVariables(ofstream& fout, const Dart
          << ", " << config->getTtcDecAlt()
          << ", " << config->getTtcIncAlt2()
          << ", " << config->getTtcDecAlt2();
+
+    cout << "DumpPlanningProblems::writeInitialStateVariables altitude level = "
+            << config->getAltitudeLevel() << endl;
 }
 
 void DumpPlanningProblems::writeData(const string& destinationDir,

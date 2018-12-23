@@ -13,4 +13,4 @@ include_HEADERS = pladapt/State.h pladapt/AdaptationManager.h pladapt/Configurat
 	pladapt/timeseries/OversamplingTimeSeriesPredictor.h \
 	pladapt/timeseries/ScenarioTree.h pladapt/timeseries/TimeSeriesPredictor.h \
 	pladapt/UtilityFunction.h pladapt/Utils.h \
-	pladapt/PlanDB.h pladapt/HybridAdaptationManager.h
+	pladapt/PlanDB.h pladapt/ClassifyProblemInstance.h pladapt/HybridAdaptationManager.h

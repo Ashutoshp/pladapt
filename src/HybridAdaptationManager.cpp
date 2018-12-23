@@ -27,6 +27,7 @@
 #include <pladapt/State.h>
 #include <assert.h>
 #include <boost/filesystem.hpp>
+#include <pladapt/ClassifyProblemInstance.h>
 
 using namespace std;
 
@@ -45,6 +46,10 @@ HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC
     else if (mode == "so") hpMode = HpMode::SLOWONLY;
     else if (mode == "si") hpMode = HpMode::SLOWINSTANT;
     else assert(false);
+
+    if (hpMode == HpMode::ML0 || hpMode == HpMode::ML1) {
+        ClassifyProblemInstance::getInstance("/home/ashutosp/dart/examples/dart/PythonSrc/consolidated-db.csv", "");
+    }
 }
 
 void HybridAdaptationManager::initialize(std::shared_ptr<const pladapt::ConfigurationManager> configMgr,
@@ -73,6 +78,7 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
     adjustedConfig.setTimestep(adjustedTimestep);
     pladapt::TacticList tactics;
     static unsigned reused = 0;
+    double classifierLabel = -1.0;
 
 	// Check PlanDB for a the existance of the current state
 	State currentState;
@@ -113,7 +119,6 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
 
         std::vector<double>::iterator itr1 = targetPredictions.begin();
         std::vector<double>::iterator itr2 = threatPredictions.begin();
-        unsigned i = 1;
 
         /*while (itr1 != targetPredictions.end()) {
             cout << i << " Target = " << *itr1 << "    Threat = " << *itr2 << endl;
@@ -149,18 +154,25 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
         // There is no straightforward way to pass the information to this point from
         // command line params 
 
-		double classifierLabel = -1;
-
         // Check threat level
         cout << "Threat range:" << dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange << endl;
         cout << "Destroy Probability = " << destroyProbability << endl;
         cout << "Detection Probability = " << detectionProbability << endl;
+        cout << "Altitude level = " << adjustedConfig.getAltitudeLevel() << endl;
 
-        DebugFileInfo::getInstance()->write("Threat range:" + std::to_string(dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange));
+        DebugFileInfo::getInstance()
+                ->write("Threat range:" + std::to_string(dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange));
+
+        if (hpMode != PG && (hpMode == HpMode::ML0 || hpMode == HpMode::ML1)) {
+            classifierLabel  = ClassifyProblemInstance::getInstance()->useReactive(&adjustedConfig,
+                                            targetPredictions, threatPredictions);
+        }
 
         if (hpMode == PG 
-                //|| (hpMode == CB && destroyProbability >= 0.6)) {
-                && adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange) {
+                || (hpMode == CB && destroyProbability >= 0.6)
+                || (hpMode == HpMode::ML0 && classifierLabel != 1.0)
+                || (hpMode == HpMode::ML1 && classifierLabel != 0.0)) {
+                //|| adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange) {
             if (hpMode == CB) {
                 DebugFileInfo::getInstance()->write("In danger: ");
                 cout << "In danger: ";
@@ -231,7 +243,6 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
     } else {
         DebugFileInfo::getInstance()->writeEndLine();
     }
-    //assert(false);
 
     return tactics;
 }
