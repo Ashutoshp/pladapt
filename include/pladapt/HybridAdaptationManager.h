@@ -68,7 +68,8 @@ virtual ~HybridAdaptationManager();
 
 typedef enum {
 PG,
-CB,
+CB1,
+CB2,
 ML0,
 ML1,
 SLOWONLY,

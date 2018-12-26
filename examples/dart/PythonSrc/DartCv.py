@@ -38,8 +38,11 @@ from imblearn.over_sampling import SMOTE
 from imblearn.over_sampling import ADASYN
 from imblearn.over_sampling import BorderlineSMOTE
 from imblearn.over_sampling import SMOTENC
+from sklearn.decomposition import PCA
 from statistics import *
 import matplotlib.pyplot as plt
+import pandas as pd
+
 #import numpy
 
 def scatterplot(x_data, y_data, x_label="data", y_label="label", title="", color = "r", yscale_log=False):
@@ -97,6 +100,41 @@ class CrossValidate:
         assert False
         return 0, 0
 
+    def test_pca(self, features, labels):
+        features_list = StandardScaler().fit_transform(features)
+       
+        pca = PCA(n_components=2)
+        principalComponents = pca.fit_transform(features_list)
+        #print(principalComponents)
+        #principalDf = pd.DataFrame(data = principalComponents, \
+        #        columns = ['principal component 1', 'principal component 2'])
+        #df = pd.Series(labels)
+        #finalDf = pd.concat([principalDf, df], axis = 1)
+
+        #print(finalDf)
+        
+        #print(finalDf[2])
+        #print(finalDf[0])
+
+        #fig = plt.figure(figsize = (8,8))
+        #ax = fig.add_subplot(1,1,1) 
+        #ax.set_xlabel('Principal Component 1', fontsize = 15)
+        #ax.set_ylabel('Principal Component 2', fontsize = 15)
+        #ax.set_title('2 component PCA', fontsize = 20)
+        #targets = [0, 2, 1]
+        #colors = ['r', 'g', 'b']
+        #for target, color in zip(targets,colors):
+        #    indicesToKeep = finalDf[0] == target
+        #    ax.scatter(finalDf.loc[indicesToKeep, 'principal component 1'] \
+        #       , finalDf.loc[indicesToKeep, 'principal component 2'] \
+        #       , c = color \
+        #       , s = 50)
+        #ax.legend(targets)
+        #ax.grid()
+        #plt.show()
+
+        return principalComponents, labels
+
     def cv_per_problem(self):
         all_training_problems = self.__db.get_all_training_problems()
         scoring = ['accuracy', 'precision_micro', 'recall_micro', 'f1_micro', \
@@ -104,9 +142,12 @@ class CrossValidate:
                     'precision_weighted', 'recall_weighted', 'f1_weighted']
         #X_resampled, y_resampled = SMOTE().fit_resample(all_training_problems.get_features_list(), \
         #        all_training_problems.get_label_list())
+        #self.test_pca(all_training_problems.get_features_list(), all_training_problems.get_label_list())
         features_list = StandardScaler().fit_transform(all_training_problems.get_features_list())
         X_resampled, y_resampled = ADASYN().fit_resample(features_list, \
                 all_training_problems.get_label_list())
+        #X_resampled, y_resampled = self.test_pca(X_resampled, y_resampled)
+
         #X_resampled, y_resampled = BorderlineSMOTE().fit_resample(all_training_problems.get_features_list(), \
         #            all_training_problems.get_label_list())
 
@@ -162,10 +203,10 @@ class CrossValidate:
         #clf = DecisionTreeClassifier(random_state=0, max_depth=100, max_features=None, class_weight='balanced')
         #clf = DecisionTreeClassifier(random_state=0, max_depth=100,max_features=None, class_weight= {0:0.2, 1:.5, 2:0.3})
         #clf = RandomForestClassifier(max_depth=50, random_state=0)
-        clf = ExtraTreesClassifier(n_estimators=90)
+        #clf = ExtraTreesClassifier(n_estimators=90)
         #clf = AdaBoostClassifier()
         #clf = GradientBoostingClassifier(max_depth=3) # Reasonbale precision for 0, recall/precision for 2
-        #clf = BaggingClassifier(n_estimators=20)
+        clf = BaggingClassifier(n_estimators=20)
 
         #n_estimators = [25, 50, 75, 100, 125, 150, 175, 200, 225, 250]
         #criterion = ['gini', 'entropy']
@@ -833,7 +874,153 @@ def test_mode_2(data_file, test_seeds):
     test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
 
+def test_mode_3(data_file, test_seeds):
+    problem_db = DBWrapper(data_file, test_seeds)
+    problem_db.read_db()
+    train_problems = problem_db.get_not_ignored_seed_problems()
+    test_problems = problem_db.get_ignored_seed_problems()
+
+    print("Label 0 count = ", test_problems.get_label_list().count(0))
+    print("Label 1 count = ", test_problems.get_label_list().count(1))
+    print("Label 2 count = ", test_problems.get_label_list().count(2))
+
+    total_features = train_problems.get_features_list() + test_problems.get_features_list()
+    print("total_features = ", len(total_features))
+    total_labels = train_problems.get_label_list() + test_problems.get_label_list()
+    print("total_labels = ", len(total_labels))
+
+    #features_list = StandardScaler().fit_transform(total_features)
+    features_list = total_features
+    X_resampled, y_resampled = SMOTE().fit_resample(features_list, \
+                total_labels)
+
+    assert(len(X_resampled) == len(y_resampled))
+
+    print("total X_resampled = ", len(X_resampled))
+    print("total Y_resampled = ", len(y_resampled))
+
+    #s_x = set(X_resampled)
+    #s_y = set(Y_resampled)
+
+    #print("total s_x = ", len(s_x))
+    #print("total s_y = ", len(s_y))
     
+    final_train_features = list()
+    final_train_labels = list()
+
+    test_features = test_problems.get_features_list()
+    test_labels = test_problems.get_label_list()
+
+    i = 0
+
+    a = [0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, \
+        0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, \
+        0.00000000e+00,   2.23891000e-02,   2.23891000e-02,   8.77379000e-02, \
+        8.77379000e-02,   2.86217000e-02,   2.86217000e-02,   7.62440000e-02, \
+        7.62440000e-02,   2.98783000e-01,   2.98783000e-01,   9.74684000e-02, \
+        9.74684000e-02,   2.23891000e-02,   2.23891000e-02,   8.77379000e-02, \
+        8.77379000e-02,   2.86217000e-02,   2.86217000e-02,  2.56395000e-02, \
+        2.56395000e-02,   9.97498000e-02,   9.97498000e-02,   3.18571000e-02, \
+        3.18571000e-02,   8.73130000e-02,   8.73130000e-02,   3.39688000e-01, \
+        3.39688000e-01,   1.08486000e-01,   1.08486000e-01,   2.56395000e-02, \
+        2.56395000e-02,   9.97498000e-02,   9.97498000e-02,   3.18571000e-02, \
+        3.18571000e-02,   2.38330000e-02,   2.38330000e-02,   9.82116000e-02, \
+        9.82116000e-02,   3.21142000e-02,   3.21142000e-02,   8.11610000e-02, \
+        8.11610000e-02,   3.34450000e-01,   3.34450000e-01,   1.09362000e-01, \
+        1.09362000e-01,   2.38330000e-02,   2.38330000e-02,   9.82116000e-02, \
+        9.82116000e-02,   3.21142000e-02,   3.21142000e-02,   1.59221000e-04, \
+        1.59221000e-04,   7.11760000e-03,   7.11760000e-03,   8.15938000e-03, \
+        8.15938000e-03,   5.42211000e-04,   5.42211000e-04,   2.42383000e-02, \
+        2.42383000e-02,   2.77860000e-02,   2.77860000e-02,   1.59221000e-04, \
+        1.59221000e-04,   7.11760000e-03,   7.11760000e-03,   8.15938000e-03, \
+        8.15938000e-03,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, \
+        0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, \
+        0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, \
+        0.00000000e+00,   0.00000000e+00,   0.00000000e+00,   0.00000000e+00, \
+        0.00000000e+00,   0.00000000e+00,   0.00000000e+00]
+
+    print(a in test_features)
+
+    while (i < len(X_resampled)):
+        #print("X_resampled[i]", X_resampled[i])
+        
+        j = 0;
+        f = list()
+        while (j < len(X_resampled[i])):
+            f.append(X_resampled[i][j])
+            j = j+1
+
+        #print("f = ", f)
+
+        if (not (f in test_features)):
+        #if (not test_features.any(X_resampled[i])):
+            final_train_features.append(X_resampled[i])
+            final_train_labels.append(y_resampled[i])
+
+        i = i + 1
+
+    print("total final_train_features = ", len(final_train_features))
+    print("total final_train_labels = ", len(final_train_labels))
+    #s_test_x = set(test_problems.get_features_list())
+    #s_test_y = set(test_problems.get_label_list())
+
+    #s_train_x = s_x - 
+    return
+
+    features_list = StandardScaler().fit_transform(train_problems.get_features_list())
+    X_resampled, y_resampled = SMOTE().fit_resample(features_list, \
+                train_problems.get_label_list())
+    #X_resampled, y_resampled = SMOTE().fit_resample(train_problems.get_features_list(), \
+    #            train_problems.get_label_list())
+
+    print("****** SMOTE *******")
+    test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
+    #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifierWeight")
+    test_classifier(X_resampled, y_resampled, test_problems, "RandomForestClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "ExtraTreesClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "AdaBoostClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
+    
+    features_list = StandardScaler().fit_transform(train_problems.get_features_list())
+    X_resampled, y_resampled = ADASYN().fit_resample(features_list, \
+                train_problems.get_label_list())
+    #X_resampled, y_resampled = ADASYN().fit_resample(train_problems.get_features_list(), \
+    #            train_problems.get_label_list())
+    
+    print("****** ADASYN *******")
+    test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
+    #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifierWeight")
+    test_classifier(X_resampled, y_resampled, test_problems, "RandomForestClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "ExtraTreesClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "AdaBoostClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
+    
+    features_list = StandardScaler().fit_transform(train_problems.get_features_list())
+    X_resampled, y_resampled = BorderlineSMOTE().fit_resample(features_list, \
+                train_problems.get_label_list())
+    #X_resampled, y_resampled = BorderlineSMOTE().fit_resample(train_problems.get_features_list(), \
+    #            train_problems.get_label_list())
+
+    print("****** BorderlineSMOTE *******")
+    test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
+    #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifierWeight")
+    test_classifier(X_resampled, y_resampled, test_problems, "RandomForestClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "ExtraTreesClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "AdaBoostClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
+
 
 #def test(data_file, fold, iterations, ignored_seeds, merge_labels = True):
 #    cv = CrossValidate(data_file, fold, iterations, ignored_seed)
@@ -852,7 +1039,7 @@ def main():
     #print (sys.argv[0])
     print (sys.argv[1])
     #print (sys.argv[3])
-    test_mode = 2
+    test_mode = 3
     merge_labels = False
 
     #if (len(sys.argv) > 5):
@@ -906,11 +1093,23 @@ def main():
         
             #print("test_seeds = ", len(random_seeds))
             test_mode_2(sys.argv[1], random_seeds)
+    elif (test_mode == 3):
+        i = 0
+        iterations = 1
+        while (i < iterations):
+            i = i + 1
+            print ("iteration ##### ", i)
+            #random_seeds = list(get_n_random_numbers(1, 700, 70))
+            random_seeds = []
+            random_seeds = [384, 640, 2, 257, 646, 392, 8, 522, 267, \
+                    268, 526, 399, 16, 529, 658, 19, 147, 405, 659, 536, \
+                    154, 412, 286, 160, 418, 162, 420, 294, 44, 178, 692, \
+                    693, 53, 696, 572, 316, 60, 320, 324, 71, 201, 204, 593, \
+                    466, 211, 473, 219, 220, 477, 224, 484, 357, 356, 103, 360, \
+                    105, 361, 493, 494, 251, 240, 623, 242, 372, 505, 506, \
+                    635, 253, 638, 639]
+            test_mode_3(sys.argv[1], random_seeds)
     else:
-    #    total_seeds = len(seed_list)
-        #print("total_seeds = ", total_seeds)
-        #fold_size = int(total_seeds/int(sys.argv[2]))
-        #print("fold_size = ", fold_size)
         print (sys.argv[2])
         iteration = 0
         recall_0_avg = 0
@@ -919,71 +1118,11 @@ def main():
         precision_1_avg = 0
 
         while (iteration < int(sys.argv[3])):
-            #test_seed_indices = get_random_numbers(0, total_seeds - 1, fold_size)
-            #print("test_seed_indices = ", test_seed_indices)
-            #ignored_seeds = list()
-
-            #for index in test_seed_indices:
-            #    ignored_seeds.append(seed_list[index])
-    
-            #print("ignored_seeds = ", ignored_seeds)
-            #print("@@@@@@@@@@@@@@ iteration = ", iteration, "@@@@@@@@@@@@@@@@@@@@")
-            #recall_0, recall_1, precision_0, precision_1 = test(sys.argv[1], sys.argv[2], \
-            #        sys.argv[3], ignored_seeds, merge_labels)
             cv = CrossValidate(sys.argv[1], sys.argv[2], "", "")
             max_recall_0_mean = cv.do_cv()
-            #print("max_recall_0_mean", max_recall_0_mean)
-            
-            #print("recall_0, recall_1, precision_0, precision_1", recall_0, recall_1, precision_0, precision_1)
-            #recall_0_avg = recall_0_avg + recall_0
-            #recall_1_avg = recall_1_avg + recall_1
-            #precision_0_avg = precision_0_avg + precision_0
-            #precision_1_avg = precision_1_avg + precision_1
             print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
             
             iteration = iteration + 1
-
-        #recall_0_avg = recall_0_avg/(int(sys.argv[3]))
-        #recall_1_avg = recall_1_avg/(int(sys.argv[3]))
-        #precision_0_avg = precision_0_avg/(int(sys.argv[3]))
-        #precision_1_avg = precision_1_avg/(int(sys.argv[3]))
-        #print("recall_0 average = ", recall_0_avg)
-        #print("recall_1 average = ", recall_1_avg)
-        #print("precision_0 average = ", precision_0_avg)
-        #print("precision_1 average = ", precision_1_avg)
-    #else:
-    #    ignored_traces = list()
-    #    trace_debug_file_name = sys.argv[2] + "_trace_log.csv"
-    #    debug_trace_file = open(trace_debug_file_name, "w")
-    #    debug_trace_file.write("Trace, estimators, recall_score_0, recall_score_1, \
-    #                            precision_score_0, precision_score_1, max_recall_0_mean\n")
-    #    file_name_index = 0
-       
-    #    for trace in trace_list:
-    #        debug_file_name = sys.argv[2] + "_" + str(file_name_index) + "_ExtraTreesClassifier_log.csv"
-    #        cv_file_name = sys.argv[2] + "_" + str(file_name_index) + "_cv_ExtraTreesClassifier_log.csv"
-    #        print("============= Trace, Index ", trace, file_name_index)
-    #        debug_file = open(debug_file_name, "w")
-    #        cv_file = open(cv_file_name, "w")
-
-    #        file_name_index = file_name_index + 1
-
-    #        ignored_traces = [trace]
-    #        cv = CrossValidate(sys.argv[1], sys.argv[2], sys.argv[3], ignored_traces, \
-    #                compare_past_workload_for_similarity, debug_file, cv_file)
-    #        max_recall_0_mean, estimators = cv.do_cv()
-    #        print("max_recall_0_mean, estimators", max_recall_0_mean, estimators)
-    #        recall_0, recall_1, prec_score_0, prec_score_1 = cv.test_ignored_traces(merge_labels, estimators)
-    #        row = str(trace) + "," + str(estimators) + "," + str(recall_0) + ", " + str(recall_1) + ","\
-    #              + str(prec_score_0) + ", " + str(prec_score_1) + "," + str(max_recall_0_mean) + '\n'
-    #        debug_trace_file.write(row)
-    #        print("recall_0, recall_1, prec_score_0, prec_score_1", recall_0, recall_1, prec_score_0, prec_score_1)
-    #        debug_file.close()
-    #        cv_file.close()
-
-    #    debug_trace_file.close()
-    
-    #print("Final f1_score = ", accuracy)
 
 if __name__ == "__main__":
     sys.exit(main())

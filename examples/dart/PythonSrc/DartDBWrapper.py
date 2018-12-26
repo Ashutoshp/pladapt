@@ -152,6 +152,8 @@ class DBWrapper:
         db_csvfile.close()
 
         #print("Number of inf problems = ", len(self.__inf_problems))
+        print("Total problems ignored = ", self.__ignored_seed_problems.get_db_size())
+        print("Total Problems NOT ignored = ", self.__not_ignored_seed_problems.get_db_size())
         print("Number of ignored seeds = ", len(self.__ignore_seeds))
         print("Number of ignored traces Problems = ", self.__ignored_seed_problems.get_db_size())
         print("Number of NOT ignored traces Problems = ", self.__not_ignored_seed_problems.get_db_size())

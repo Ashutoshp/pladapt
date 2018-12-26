@@ -40,7 +40,8 @@ const std::string PCTL = "Rmax=? [ F \"final\" ]";
 HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC(0),
 		pathToStoreProfilingProblems("/home/ashutosp/ProfilingProblems/") {
     if (mode == "pg") hpMode = HpMode::PG;
-    else if (mode == "cb") hpMode = HpMode::CB;
+    else if (mode == "cb1") hpMode = HpMode::CB1;
+    else if (mode == "cb2") hpMode = HpMode::CB2;
     else if (mode == "ml0") hpMode = HpMode::ML0;
     else if (mode == "ml1") hpMode = HpMode::ML1;
     else if (mode == "so") hpMode = HpMode::SLOWONLY;
@@ -169,15 +170,20 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
         }
 
         if (hpMode == PG 
-                || (hpMode == CB && destroyProbability >= 0.6)
-                || (hpMode == HpMode::ML0 && classifierLabel != 1.0)
+                || (hpMode == HpMode::CB1 && destroyProbability >= 0.6)
+                || ((hpMode == HpMode::CB2) && (adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange))
+                || (hpMode == HpMode::ML0 && classifierLabel == 1.0)
                 || (hpMode == HpMode::ML1 && classifierLabel != 0.0)) {
-                //|| adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange) {
-            if (hpMode == CB) {
+            if (hpMode == HpMode::CB1 || hpMode == HpMode::CB2) {
                 DebugFileInfo::getInstance()->write("In danger: ");
                 cout << "In danger: ";
-                DebugFileInfo::getInstance()->write("Destroy Probability = " + to_string(destroyProbability));
-                DebugFileInfo::getInstance()->write("Detection Probability = " + to_string(detectionProbability));
+                if (hpMode == HpMode::CB1) {
+                    DebugFileInfo::getInstance()->write("Destroy Probability = " + to_string(destroyProbability));
+                    DebugFileInfo::getInstance()->write("Detection Probability = " + to_string(detectionProbability));
+                } else {
+                    DebugFileInfo::getInstance()->write("Threat Range = " + to_string(dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange));
+                    DebugFileInfo::getInstance()->write("Altitude = " + to_string(adjustedConfig.getAltitudeLevel()));
+                }
             }
 
             cout << "Fast Planning Triggered" << endl;

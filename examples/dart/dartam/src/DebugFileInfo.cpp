@@ -19,7 +19,8 @@ DebugFileInfo::DebugFileInfo(const int seed, const string& parentDirectory, cons
     // TODO Auto-generated constructor stub
 
     if (mode == "pg") mMode = "ProbGeneration";
-    else if (mode == "cb") mMode = "Hybrid";
+    else if (mode == "cb1") mMode = "Hybrid_CB1";
+    else if (mode == "cb2") mMode = "Hybrid_CB2";
     else if (mode == "ml0") mMode = "Hybrid_IBL0";
     else if (mode == "ml1") mMode = "Hybrid_IBL1";
     else if (mode == "so") mMode = "Slow";
