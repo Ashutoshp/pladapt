@@ -1,10 +1,4 @@
-384, 640, 2, 257, 646, 392, 8, 522, 267, \
-                    268, 526, 399, 16, 529, 658, 19, 147, 405, 659, 536, \
-                    154, 412, 286, 160, 418, 162, 420, 294, 44, 178, 692, \
-                    693, 53, 696, 572, 316, 60, 320, 324, 71, 201, 204, 593, \
-                    466, 211, 473, 219, 220, 477, 224, 484, 357, 356, 103, 360, \
-                    105, 361, 493, 494, 251, 240, 623, 242, 372, 505, 506, \
-                    635, 253, 638, 639
+384 640 2 257 646 392 8 522 267 268 526 399 16 529 658 19 147 405 659 536 154 412 286 160 418 162 420 294 44 178 692 693 53 696 572 316 60 320 32 71 201 204 593 466 211 473 219 220 477 224 484 357 356 103 360 105 361 493 494 251 240 623 242 372 505 506 635 253 638 639
 
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=384
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=640
@@ -45,7 +39,6 @@
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=60
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=320
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=324
-./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=71
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=201
 ./run.sh --adapt-mgr hybrid --decision-horizon 5 --observation-horizon 5 --ecm --altitude-levels 4 --accumulate-observations --map-size 40 --two-level-tactics --hp-mode ml1 --num-targets 20 --num-threats 10 --stay-alive-reward 1 --ecm-threat 0.15 --ecm-target 0.3 --error-tolerance 0.5 --destruction-formation-factor=1.5 --seed=204
