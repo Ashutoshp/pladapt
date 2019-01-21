@@ -6,16 +6,16 @@ import time
 #from ProblemDatabase import ProblemInstance
 #from ProblemDatabase import DBWrapper
 from DartDBWrapper import DBWrapper
-from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.tree import DecisionTreeClassifier
 
-class ETClassifier:
-    __slots__ = ['__data_file', '__skip_trace', '__db', '__clf', '__compare_past_workload_for_similarity']
-    
-    def __init__(self, data_file, skip_seeds, estimators_count = 85):
+class DartDecisionTreeClassifier:
+    __slots__ = ['__data_file', '__skip_seeds', '__db', '__clf', '__compare_past_workload_for_similarity']
+
+    def __init__(self, data_file, skip_seeds, depth = 100):
         print("Ignoring Trace while training = ", skip_seeds)
-        print("Estimators Count = ", estimators_count)
+        print("max_depth = ", depth)
         self.__data_file = data_file
-        self.__skip_seeds = skip_seeds
+        #self.__skip_seeds = skip_seeds
         self.__skip_seeds = [384, 640, 2, 257, 646, 392, 8, 522, 267, \
                     268, 526, 399, 16, 529, 658, 19, 147, 405, 659, 536, \
                     154, 412, 286, 160, 418, 162, 420, 294, 44, 178, 692, \
@@ -23,8 +23,8 @@ class ETClassifier:
                     466, 211, 473, 219, 220, 477, 224, 484, 357, 356, 103, 360, \
                     105, 361, 493, 494, 251, 240, 623, 242, 372, 505, 506, \
                     635, 253, 638, 639]
-        self.__db = DBWrapper(data_file, skip_seeds)
-        self.__clf = ExtraTreesClassifier(n_estimators=estimators_count)
+        self.__db = DBWrapper(data_file, self.__skip_seeds)
+        self.__clf = DecisionTreeClassifier(random_state=None, max_depth=depth, max_features=None, class_weight='balanced')
         
     def train(self):
         print("Inside train")
@@ -184,12 +184,12 @@ class ETClassifier:
    
 def main():
     classifier = None
-    estimator_count = 87
+    depth = 100
 
     if (len(sys.argv) > 3):
-        estimator_count = int(sys.argv[3])
+        depth = int(sys.argv[3])
     
-    classifier = ETClassifier(sys.argv[1], sys.argv[2], estimator_count)
+    classifier = DartDecisionTreeClassifier(sys.argv[1], sys.argv[2], depth)
 
     classifier.train()
     #t1 = current_time()

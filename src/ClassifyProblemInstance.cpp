@@ -45,7 +45,7 @@ ClassifyProblemInstance::~ClassifyProblemInstance() {
 
 void ClassifyProblemInstance::create_classifier(string problem_db_file, string source_file) {
     PyObject *module, *dict, *python_class;
-    const char* classifierScript = "DartETClassifier";
+    const char* classifierScript = "DartDecisionTreeClassifier";
 
     char* pPath = getenv( "PYTHONPATH" );
 
@@ -98,7 +98,7 @@ void ClassifyProblemInstance::create_classifier(string problem_db_file, string s
         Py_DECREF(module);
 
         // Builds the name of a callable class
-        python_class = PyDict_GetItemString(dict, "ETClassifier");
+        python_class = PyDict_GetItemString(dict, "DartDecisionTreeClassifier");
         //printf("7\n");
 
         if (python_class == NULL) {
@@ -117,8 +117,9 @@ void ClassifyProblemInstance::create_classifier(string problem_db_file, string s
             //object = PyObject_CallFunction(python_class, "abc", "1");
             PyObject *args;
 
-            long int estimatorsCount =  85;
-            args = Py_BuildValue("ssii", problem_db_file.c_str(), source_file.c_str(), estimatorsCount);
+            //long int estimatorsCount =  85;
+            long int depth =  100;
+            args = Py_BuildValue("ssi", problem_db_file.c_str(), source_file.c_str(), depth);
             mClassifierObject = PyObject_CallObject(python_class, args);
             //string file_name = DebugFileInfo::getInstance()->GetDebugFilePath();
                  //   "/home/ashutosp/Dropbox/regression/HP_triggers_arrival_rate";

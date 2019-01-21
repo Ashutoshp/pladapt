@@ -82,14 +82,17 @@ def get_n_random_numbers(minimum, maximum, count):
 class CrossValidate:
     #__slots__ = ['__features_list', '__labels_list', '__problems']
     
-    def __init__(self, data_file, fold, debug_file = "", cv_file = ""):
+    def __init__(self, data_file, fold, ignored_seeds = "", debug_file = "", cv_file = ""):
         self.__data_file = data_file
         self.__fold = int(fold)
-        self.__db = DBWrapper(data_file)
+        self.__db = DBWrapper(data_file, ignored_seeds)
+        self.__ignored_seeds = ignored_seeds
         #self.__debug_file_name = str(fold) + "_ExtraTreesClassifier_log.csv"
         self.__file = debug_file
         #self.__cv_file_name = str(fold) + "_cv_ExtraTreesClassifier_log.csv"
         self.__cv_file = cv_file
+        self.__features_list = ""
+        self.__labels_list = ""
         #open("cv_log", "w")
  
     def get_all_traces(self):
@@ -541,18 +544,16 @@ class CrossValidate:
     def read_file(self):
         self.__db.read_db()
 
-    def test_ignored_traces(self, merge_labels, estimators):
-        all_training_problems = self.__db.get_all_training_problems()
-
+    def test_ignored_seeds(self, merge_labels, estimators):
         #ExtraTreesClassifier(n_estimators=10, criterion=’gini’, max_depth=None, \
         #min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, \
         #max_features=’auto’, max_leaf_nodes=None, min_impurity_decrease=0.0, \
         #min_impurity_split=None, bootstrap=False, oob_score=False, n_jobs=1, \
         #random_state=None, verbose=0, warm_start=False, class_weight=None)
         clf = ExtraTreesClassifier(n_estimators = estimators)
-        clf.fit(all_training_problems.get_features_list(), all_training_problems.get_label_list())
+        clf.fit(self.__features_list, self.__labels_list)
 
-        all_ignored_problems = self.__db.get_ignored_traces_problem_list()
+        all_ignored_problems = self.__db.get_ignored_seed_problems()
         problem_features = all_ignored_problems.get_features_list()
         problem_labels = all_ignored_problems.get_label_list()
         predicted_labels = list()
@@ -663,7 +664,355 @@ class CrossValidate:
         #self.__cv_file.close()
 
         return max_recall_0_mean
+
+    def loocv_per_problem(self, classifier, features_list, labels_list):
+        #all_training_problems = self.__db.get_all_training_problems()
+        scoring = ['accuracy', 'precision_micro', 'recall_micro', 'f1_micro', \
+                    'precision_macro', 'recall_macro', 'f1_macro', \
+                    'precision_weighted', 'recall_weighted', 'f1_weighted']
+        #clf = svm.SVC(kernel='linear', C=0.5)
+        #clf = LinearSVC(random_state=0, C=0.000001) 
+        #multi_class='crammer_singer')
+        #clf = svm.SVC(C=500, decision_function_shape='ovr')
+        #clf = KNeighborsClassifier(n_neighbors = 3, algorithm = 'ball_tree')
+        #clf = RadiusNeighborsClassifier(n_neighbors = 3, algorithm = 'ball_tree')
+        #clf = LogisticRegression(C=1.0, solver='newton-cg', multi_class='multinomial')
+        #clf = LogisticRegression(C=1.0, solver='sag', multi_class='multinomial')
+        #clf = LogisticRegression(solver='sag')
+        #clf = LogisticRegression(solver='saga')
+        #clf = LogisticRegression(solver='lbfgs')
+        #clf = LogisticRegressionCV(solver='newton-cg')
+        #clf = MLPClassifier(solver='sgd')
+        #clf = DecisionTreeClassifier(random_state=0)
+        #clf = RandomForestClassifier(max_depth=20, random_state=0)
+        #clf = AdaBoostClassifier()
+        #clf = GradientBoostingClassifier(max_depth=3)
+        #clf = BaggingClassifier(n_estimators=20)
+
+        #n_estimators = [25, 50, 75, 100, 125, 150, 175, 200, 225, 250]
+        #criterion = ['gini', 'entropy']
+        #max_depth = [None, 20, 30, 50]
+        #min_samples_split = [2, 12, 22]
+        #max_features = [None, 'log2', 'sqrt', 'auto']
+
+        n_estimators = [80, 83, 85, 87, 90, 91, 93, 95, 97, 100, 102, 105, 107, 110]
+        criterion = ['gini']
+        max_depth = [None]
+        min_samples_split = [2]
+        max_features = ['auto']
+        #loss = ['deviance']
+
+        # ExtraTree
+        self.__file.write("n_estimators, criterion, max_depth, min_samples_split, max_features, \
+                        recall_score_0, recall_score_1, recall_score_2, precision_score_0, precision_score_1, precision_score_2, \
+                        f1_score_0, f1_score_1, f1_score_2, recall_score_macro, recall_score_micro, precision_score_macro, \
+                        precision_score_micro, f1_score_macro, f1_score_micro\n")
+        #self.__file.write("n_estimators, loss, max_depth, min_samples_split, max_features, \
+        #                recall_score_0, recall_score_1, recall_score_2, precision_score_0, precision_score_1, precision_score_2, \
+        #                f1_score_0, f1_score_1, f1_score_2, recall_score_macro, recall_score_micro, precision_score_macro, \
+        #                precision_score_micro, f1_score_macro, f1_score_micro\n")
+        self.__cv_file.write("n_estimators, criterion, max_depth, min_samples_split, max_features, \
+                        recall_0_avg, recall_0_dev, recall_1_avg, recall_1_dev, recall_2_avg, recall_2_dev,\
+                        recall_macro, recall_micro, recall_weighted, precision_0_avg, precision_0_dev, \
+                        precision_1_avg, precision_1_dev, precision_2_avg, precision_2_dev, \
+                        precision_macro, precision_micro, precision_weighted, f1_0_avg, f1_0_dev, \
+                        f1_1_avg, f1_1_dev, f1_2_avg, f1_2_dev, f1_macro, f1_micro, f1_weighted\n")
+
+        #GradientBoostingClassifier(loss=’deviance’, learning_rate=0.1, n_estimators=100, \
+                #subsample=1.0, criterion=’friedman_mse’, min_samples_split=2, min_samples_leaf=1, \
+                #min_weight_fraction_leaf=0.0, max_depth=3, min_impurity_decrease=0.0, \
+                #min_impurity_split=None, init=None, random_state=None, max_features=None, \
+                #verbose=0, max_leaf_nodes=None, warm_start=False, presort=’auto’)
+        max_recall_0_mean = 0
+        best_recall_1_mean = 0
+        best_recall_2_mean = 0
+        best_estimator_count = 10 # Start with the default value
+
+        for estimator in n_estimators:
+            for c in criterion:
+                for depth in max_depth:
+                    for sample_split in min_samples_split:
+                        for features in max_features:
+                            recall_0 = []
+                            recall_1 = []
+                            recall_2 = []
+
+                            precision_0 = []
+                            precision_1 = []
+                            precision_2 = []
+
+                            f1_0 = []
+                            f1_1 = []
+                            f1_2 = []
+
+                            clf = ExtraTreesClassifier(n_estimators=estimator, criterion=c, \
+                                    max_depth=depth, min_samples_split=sample_split, \
+                                    min_samples_leaf=1, min_weight_fraction_leaf=0.0, \
+                                    max_features=features, max_leaf_nodes=None, \
+                                    min_impurity_decrease=0.0, min_impurity_split=None, \
+                                    bootstrap=False, oob_score=False, \
+                                    n_jobs=1, random_state=None, verbose=0, \
+                                    warm_start=False, class_weight=None)
         
+                            #clf = GradientBoostingClassifier(loss=l, learning_rate=0.1, n_estimators=estimator, \
+                            #        subsample=1.0, criterion='friedman_mse', min_samples_split=sample_split, min_samples_leaf=1, \
+                            #        min_weight_fraction_leaf=0.0, max_depth=depth, min_impurity_decrease=0.0, \
+                            #        min_impurity_split=None, init=None, random_state=None, max_features=features, \
+                            #        verbose=0, max_leaf_nodes=None, warm_start=False, presort='auto')
+                            skf = StratifiedKFold(n_splits=self.__fold)
+                            skf.get_n_splits(features_list, labels_list)
+                            #features_list = all_training_problems.get_features_list()
+                            #labels_list = all_training_problems.get_label_list()
+                            fold = 0
+                            for train_index, test_index in skf.split(features_list,  labels_list):
+                                #print("TRAIN:", train_index, "TEST:", test_index)
+            
+                                tr_features = list()
+                                tr_labels = list()
+                                tt_features = list()
+                                tt_labels = list()
+
+                                for i in train_index:
+                                    tr_features.append(features_list[i])
+                                    tr_labels.append(labels_list[i])
+
+                                for i in test_index:
+                                    tt_features.append(features_list[i])
+                                    tt_labels.append(labels_list[i])
+
+                                #print(tr_features)
+                                clf.fit(tr_features, tr_labels)
+                                predicted_labels = list()
+                                train_predicted_labels = list()
+
+                                #for problem in tr_features:
+                                #    predicted_label = clf.predict([problem])
+                                #    train_predicted_labels.append(predicted_label)
+
+                                #i = 0
+                                #while i < len(train_predicted_labels):
+                                    #print("Predicted,  Actual ", train_predicted_labels[i], tr_labels[i])
+                                #    i = i + 1
+
+                                #print("Confusion Matrix for train data = ", confusion_matrix(tr_labels, train_predicted_labels))
+
+                                for problem in tt_features:
+                                    #print(problem)
+                                    predicted_label = clf.predict([problem])
+                                    predicted_labels.append(predicted_label)
+
+                                i = 0
+                                #   while i < len(predicted_labels):
+                                #print("Predicted,  Actual ", predicted_labels[i], tt_labels[i])
+                                #       i = i + 1
+
+                                print("&&&&&&&&&& Fold = ", fold, "&&&&&&&&&&")
+                                fold = fold + 1
+                                print("Confusion Matrix = ", confusion_matrix(tt_labels, predicted_labels))
+            
+                                recall = recall_score(tt_labels, predicted_labels, average=None)
+                                print("recall_score = ", recall)
+
+                                prec_score = precision_score(tt_labels, predicted_labels, average=None)
+                                print("precision_score = ", prec_score)
+                               
+                                f1 = f1_score(tt_labels, predicted_labels, average=None)
+                                print("f1_score = ", f1)
+                                   
+                                recall_macro = recall_score(tt_labels, predicted_labels, average='macro')
+                                print("recall_score_macro = ", recall_macro)
+                                
+                                recall_micro = recall_score(tt_labels, predicted_labels, average='micro')
+                                print("recall_score_micro = ", recall_micro)
+                                
+                                precision_macro = precision_score(tt_labels, predicted_labels, average='macro')    
+                                print("precision_score_macro = ", precision_macro)
+                                    
+                                precision_micro = precision_score(tt_labels, predicted_labels, average='micro')    
+                                print("precision_score_micro = ", precision_micro)
+                                   
+                                f1_macro = f1_score(tt_labels, predicted_labels, average='macro') 
+                                print("f1_score_macro = ", f1_macro)
+                                    
+                                f1_micro = f1_score(tt_labels, predicted_labels, average='micro')
+                                print("f1_score_micro = ", f1_micro)
+                                print("&&&&&&&&&&&&&&&&&&&&&&&&&")
+                                recall_0.append(recall[0])
+                                recall_1.append(recall[1])
+                                recall_2.append(recall[2])
+
+                                precision_0.append(prec_score[0])
+                                precision_1.append(prec_score[1])
+                                precision_2.append(prec_score[2])
+
+                                f1_0.append(f1[0])
+                                f1_1.append(f1[1])
+                                f1_2.append(f1[2])
+                                #row = str(estimator) + ", " + str(c) + ", " + str(depth) + ", " \
+                                #    + str(sample_split) + ", " + str(features) + ", " \
+                                #    + str(recall[0]) + ", " + str(recall[1])  + ", " + str(recall[2]) + ", " \
+                                #    + str(prec_score[0]) + ", " + str(prec_score[1])  + ", " + str(prec_score[2]) + ", " \
+                                #    + str(f1[0]) + ", " + str(f1[1])  + ", " + str(f1[2]) + ", " \
+                                #    + str(recall_macro) + ", " + str(recall_micro) + ", " + str(precision_macro) + ", " \
+                                #    + str(precision_micro) + ", " + str(f1_macro) + ", " + str(f1_micro) +  '\n'
+
+                                row = str(estimator) + ", " + str(c) + ", " + str(depth) + ", " \
+                                    + str(sample_split) + ", " + str(features) + ", " \
+                                    + str(recall[0]) + ", " + str(recall[1])  + ", " + str(recall[2]) + ", " \
+                                    + str(prec_score[0]) + ", " + str(prec_score[1])  + ", " + str(prec_score[2]) + ", " \
+                                    + str(f1[0]) + ", " + str(f1[1])  + ", " + str(f1[2]) + ", " \
+                                    + str(recall_macro) + ", " + str(recall_micro) + ", " + str(precision_macro) + ", " \
+                                    + str(precision_micro) + ", " + str(f1_macro) + ", " + str(f1_micro) +  '\n'
+                                self.__file.write(row)
+                                #self.__cv_file.write(row)
+
+                            scores = cross_validate(clf, features_list, labels_list, scoring=scoring, cv=skf, return_train_score=True)
+                            #print("score keys = ", sorted(scores.keys()))
+                            #print("f1_score_micro = ", scores['test_f1_micro'])
+                            print(str(estimator) + ", " + str(c) + ", " + str(depth) + ", " \
+                                    + str(sample_split) + ", " + str(features))
+                            print("*******************************************************")
+                            recall_0_mean = mean(recall_0)
+                            print("recall_0_mean = ", recall_0_mean)
+                            recall_0_dev = stdev(recall_0)
+                            print("recall_0_dev = ", recall_0_dev)
+                            
+                            recall_1_mean = mean(recall_1)
+                            print("recall_1_mean = ", recall_1_mean)
+                            recall_1_dev = stdev(recall_1)
+                            print("recall_1_dev = ", recall_1_dev)
+                            
+                            recall_2_mean = mean(recall_2)
+                            print("recall_2_mean = ", recall_2_mean)
+                            recall_2_dev = stdev(recall_2)
+                            print("recall_2_dev = ", recall_2_dev)
+                            
+                            #print("recall_macro = ", scores['test_recall_macro'])
+                            recall_macro_mean = scores['test_recall_macro'].mean()
+                            print("recall_macro_mean = ", recall_macro_mean)
+                            #print("recall_macro_std = ", scores['test_recall_macro'].std())
+
+                            #print("recall_micro = ", scores['test_recall_micro'])
+                            recall_micro_mean = scores['test_recall_micro'].mean()
+                            print("recall_micro_mean = ", recall_micro_mean)
+                            #print("recall_micro_std = ", scores['test_recall_micro'].std())
+        
+                            #print("recall_weighted = ", scores['test_recall_weighted'])
+                            recall_weighted_mean = scores['test_recall_weighted'].mean()
+                            print("recall_weighted_mean = ", recall_weighted_mean)
+                            #print("recall_weighted_std = ", scores['test_recall_weighted'].std())
+                            
+                            print("#########################")
+                            precision_0_mean = mean(precision_0)
+                            print("precision_0_mean = ", precision_0_mean)
+                            precision_0_dev = stdev(precision_0)
+                            print("precision_0_dev = ", precision_0_dev)
+                            
+                            precision_1_mean = mean(precision_1)
+                            print("precision_1_mean = ", precision_1_mean)
+                            precision_1_dev = stdev(precision_1)
+                            print("precision_1_dev = ", precision_1_dev)
+                            
+                            precision_2_mean = mean(precision_2)
+                            print("precision_2_mean = ", precision_2_mean)
+                            precision_2_dev = stdev(precision_2)
+                            print("precision_2_dev = ", precision_2_dev)
+                            
+                            #print("precision_macro = ", scores['test_precision_macro'].mean())
+                            precision_macro_mean = scores['test_precision_macro'].mean()
+                            print("precision_macro_mean = ", precision_macro_mean)
+                            #print("precision_macro_std = ", scores['test_precision_macro'].std())
+        
+                            #print("precision_micro = ", scores['test_precision_micro'].mean())
+                            precision_micro_mean = scores['test_precision_micro'].mean()
+                            print("precision_micro_mean = ", precision_micro_mean)
+                            #print("precision_micro_std = ", scores['test_precision_micro'].std())
+        
+                            #print("precision_weighted = ", scores['test_precision_weighted'])
+                            precision_weighted_mean = scores['test_precision_weighted'].mean()
+                            print("precision_weighted_mean = ", precision_weighted_mean)
+                            #print("precision_weighted_std = ", scores['test_precision_weighted'].std())
+                            print("#########################")
+                            f1_0_mean = mean(f1_0)
+                            print("f1_0_mean = ", f1_0_mean)
+                            f1_0_dev = stdev(f1_0)
+                            print("f1_0_dev = ", f1_0_dev)
+                            
+                            f1_1_mean = mean(f1_1)
+                            print("f1_1_mean = ", f1_1_mean)
+                            f1_1_dev = stdev(f1_1)
+                            print("f1_1_dev = ", f1_1_dev)
+                            
+                            f1_2_mean = mean(f1_2)
+                            print("f1_2_mean = ", f1_2_mean)
+                            f1_2_dev = stdev(f1_2)
+                            print("f1_2_dev = ", f1_2_dev)
+                            
+                            f1_score_macro_mean = (scores['test_f1_macro']).mean()
+                            print("f1_score_macro mean = ", f1_score_macro_mean)
+                            #print("f1_score_macro std = ", (scores['test_f1_macro']).std())
+        
+                            f1_score_micro_mean = (scores['test_f1_micro']).mean()
+                            print("f1_score_micro mean = ", f1_score_micro_mean)
+                            #print("f1_score_micro std = ", (scores['test_f1_micro']).std())
+        
+                            f1_score_weighted_mean = scores['test_f1_weighted'].mean()
+                            print("f1_score_weighted_mean = ", f1_score_weighted_mean)
+                            #print("f1_score_weighted_std = ", scores['test_f1_weighted'].std())
+                            print("*******************************************************")
+
+                            if (max_recall_0_mean < recall_0_mean):
+                                max_recall_0_mean = recall_0_mean
+                                best_recall_1_mean = recall_1_mean
+                                best_recall_2_mean = recall_2_mean
+                                best_estimator_count = estimator
+
+                            cv_row = str(estimator) + ", " + str(c) + ", " + str(depth) + ", " \
+                                    + str(sample_split) + ", " + str(features) + ", " \
+                                    + str(recall_0_mean) + ", " + str(recall_0_dev) + ", " \
+                                    + str(recall_1_mean) + ", " + str(recall_1_dev) + ", " \
+                                    + str(recall_2_mean) + ", " + str(recall_2_dev) + ", " \
+                                    + str(recall_macro_mean) + ", " + str(recall_micro_mean) + ", " \
+                                    + str(recall_weighted_mean) + ", " \
+                                    + str(precision_0_mean) + ", " + str(precision_0_dev) + ", " \
+                                    + str(precision_1_mean) + ", " + str(precision_1_dev) + ", " \
+                                    + str(precision_2_mean) + ", " + str(precision_2_dev) + ", " \
+                                    + str(precision_macro_mean) + ", " \
+                                    + str(precision_micro_mean) + ", " + str(precision_weighted_mean) + ", " \
+                                    + str(f1_0_mean) + ", " + str(f1_0_dev) + ", " \
+                                    + str(f1_1_mean) + ", " + str(f1_1_dev) + ", " \
+                                    + str(f1_2_mean) + ", " + str(f1_2_dev) + ", " \
+                                    + str(f1_score_macro_mean) + ", " + str(f1_score_micro_mean) + ", " \
+                                    + str(f1_score_weighted_mean) + '\n'
+                            
+                            self.__cv_file.write(cv_row)
+        #print("Score", scores)
+
+        #print("f1_score_samples = ", scores['test_f1_samples'])
+        #print("precision_samples = ", scores['test_precision_samples'])
+        #print("recall_samples = ", scores['test_recall_samples'])
+        #print("accuracy = ", scores['test_accuracy'])
+
+        return max_recall_0_mean, best_recall_1_mean, best_recall_2_mean, best_estimator_count
+
+    def do_loocv(self, classifier):
+        self.__db.read_db()
+        train_problems = self.__db.get_not_ignored_seed_problems()
+        #test_problems = self.__db.get_ignored_seed_problems()
+        features_list = StandardScaler().fit_transform(train_problems.get_features_list())
+        X_resampled, y_resampled = ADASYN().fit_resample(features_list, \
+                train_problems.get_label_list())
+        self.__features_list = X_resampled
+        self.__labels_list = y_resampled
+        max_recall_0_mean, recall_1_mean, recall_2_mean, estimators \
+                = self.loocv_per_problem(classifier, X_resampled, y_resampled)
+        #max_recall_0_mean = 0
+        #recall_1_mean = 0
+        #recall_2_mean = 0
+        #estimators = 80
+
+        return max_recall_0_mean, recall_1_mean, recall_2_mean, estimators
+
     def get_features_list(self):
         return self.__features_list
 
@@ -813,13 +1162,31 @@ def test(train_data_file, test_data_file):
 def test_mode_2(data_file, test_seeds):
     problem_db = DBWrapper(data_file, test_seeds)
     problem_db.read_db()
-    train_problems = problem_db.get_not_ignored_seed_problems()
+    #train_problems = problem_db.get_not_ignored_seed_problems()
+    train_problems = problem_db.get_all_training_problems()
     test_problems = problem_db.get_ignored_seed_problems()
-
+    print("train problem count = ", train_problems.get_db_size())
     print("Label 0 count = ", test_problems.get_label_list().count(0))
     print("Label 1 count = ", test_problems.get_label_list().count(1))
     print("Label 2 count = ", test_problems.get_label_list().count(2))
 
+    X_resampled = train_problems.get_features_list()
+    y_resampled = train_problems.get_label_list()
+
+    print("****** Default *******")
+    test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
+    return
+    test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
+    #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "DecisionTreeClassifierWeight")
+    test_classifier(X_resampled, y_resampled, test_problems, "RandomForestClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "ExtraTreesClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "AdaBoostClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
+
+    return
     features_list = StandardScaler().fit_transform(train_problems.get_features_list())
     X_resampled, y_resampled = SMOTE().fit_resample(features_list, \
                 train_problems.get_label_list())
@@ -1039,7 +1406,7 @@ def main():
     #print (sys.argv[0])
     print (sys.argv[1])
     #print (sys.argv[3])
-    test_mode = 3
+    test_mode = 2
     merge_labels = False
 
     #if (len(sys.argv) > 5):
@@ -1060,6 +1427,7 @@ def main():
         print (sys.argv[2])
         test(sys.argv[1], sys.argv[2])
     elif (test_mode == 2):
+        # Random 70 seeds to test and remaining seeds to train.
         i = 0
         iterations = 1
         while (i < iterations):
@@ -1094,6 +1462,7 @@ def main():
             #print("test_seeds = ", len(random_seeds))
             test_mode_2(sys.argv[1], random_seeds)
     elif (test_mode == 3):
+        # Generates synthetic sample from all the given seeds than leave out 70 random seeds for test
         i = 0
         iterations = 1
         while (i < iterations):
@@ -1109,6 +1478,51 @@ def main():
                     105, 361, 493, 494, 251, 240, 623, 242, 372, 505, 506, \
                     635, 253, 638, 639]
             test_mode_3(sys.argv[1], random_seeds)
+    elif (test_mode == 4):
+        # Leave one seed out of 70 seeds. Do cv on remaining 699 seeds
+        random_seeds = []
+        random_seeds = [384, 640, 2, 257, 646, 392, 8, 522, 267, \
+                    268, 526, 399, 16, 529, 658, 19, 147, 405, 659, 536, \
+                    154, 412, 286, 160, 418, 162, 420, 294, 44, 178, 692, \
+                    693, 53, 696, 572, 316, 60, 320, 324, 71, 201, 204, 593, \
+                    466, 211, 473, 219, 220, 477, 224, 484, 357, 356, 103, 360, \
+                    105, 361, 493, 494, 251, 240, 623, 242, 372, 505, 506, \
+                    635, 253, 638, 639]
+        seed_debug_file_name = sys.argv[2] + "_seed_log.csv"
+        debug_seed_file = open(seed_debug_file_name, "w")
+        debug_seed_file.write("Seed, estimators, recall_score_0, recall_score_1, recall_score_2, \
+                                recall_score, recall_macro, recall_micro, \
+                                precision_score_0, precision_score_1, precision_score_2, \
+                                precision_score, precision_macro, precision_micro, \
+                                max_recall_0_mean, recall_1_mean, recall_2_mean \n")
+        classifier = "ExtraTreesClassifier"
+        all_seeds = []
+        all_seeds.extend(range(1,701))
+
+        for random_seed in random_seeds:
+            debug_file_name = sys.argv[2] + "_" + str(random_seed) + "_" + classifier + "_log.csv"
+            cv_file_name = sys.argv[2] + "_" + str(random_seed) + "_cv_" + classifier + "_log.csv"
+            debug_file = open(debug_file_name, "w")
+            cv_file = open(cv_file_name, "w")
+
+            ignored_seeds = [random_seed]
+            cv = CrossValidate(sys.argv[1], sys.argv[2], ignored_seeds, debug_file, cv_file)
+            max_recall_0_mean, recall_1_mean, recall_2_mean, estimators = cv.do_loocv(classifier)
+            print("max_recall_0_mean, estimators", max_recall_0_mean, estimators)
+            recall_0, recall_1, prec_score_0, prec_score_1 = cv.test_ignored_seeds(merge_labels, estimators)
+            row = str(random_seed) + "," + str(estimators) + "," + str(recall_0) + ", " + str(recall_1) + ","\
+                  + str(prec_score_0) + ", " + str(prec_score_1) + "," + str(max_recall_0_mean) + ", " \
+                  + str(recall_1_mean) + ", " + str(recall_2_mean) + '\n'
+            debug_seed_file.write(row)
+            print("recall_0, recall_1, prec_score_0, prec_score_1", recall_0, recall_1, prec_score_0, prec_score_1)
+            debug_file.close()
+            cv_file.close()
+            break
+
+        debug_seed_file.close()
+    elif (test_mode == 5):
+        # Do CV on 630 seeds. And evaluate on 70 seeds as sanity check
+        print("ERROR: Mode 5 not implemented")
     else:
         print (sys.argv[2])
         iteration = 0

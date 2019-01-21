@@ -48,7 +48,7 @@ class DBWrapper:
 
         rows = 0
         count = 0
-        ignored_trace_problems = 0
+        #ignored_trace_problems = 0
         line_no = 1
         #print("xyz")
 
@@ -155,8 +155,8 @@ class DBWrapper:
         print("Total problems ignored = ", self.__ignored_seed_problems.get_db_size())
         print("Total Problems NOT ignored = ", self.__not_ignored_seed_problems.get_db_size())
         print("Number of ignored seeds = ", len(self.__ignore_seeds))
-        print("Number of ignored traces Problems = ", self.__ignored_seed_problems.get_db_size())
-        print("Number of NOT ignored traces Problems = ", self.__not_ignored_seed_problems.get_db_size())
+        print("Number of ignored seed Problems = ", self.__ignored_seed_problems.get_db_size())
+        print("Number of NOT ignored seed Problems = ", self.__not_ignored_seed_problems.get_db_size())
         print("Number of problems with not use_reactive = ", self.__not_use_reactive_problems.get_db_size())
         print("Number of problems with use_reactive = ", self.__use_either_problems.get_db_size())
         print("Number of problems with use_either = ", self.__use_either_problems.get_db_size())
