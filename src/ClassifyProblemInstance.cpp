@@ -45,7 +45,7 @@ ClassifyProblemInstance::~ClassifyProblemInstance() {
 
 void ClassifyProblemInstance::create_classifier(string problem_db_file, string source_file) {
     PyObject *module, *dict, *python_class;
-    const char* classifierScript = "DartDecisionTreeClassifier";
+    const char* classifierScript = "DartRandomForestClassifier";
 
     char* pPath = getenv( "PYTHONPATH" );
 
@@ -98,7 +98,7 @@ void ClassifyProblemInstance::create_classifier(string problem_db_file, string s
         Py_DECREF(module);
 
         // Builds the name of a callable class
-        python_class = PyDict_GetItemString(dict, "DartDecisionTreeClassifier");
+        python_class = PyDict_GetItemString(dict, "DartRandomForestClassifier");
         //printf("7\n");
 
         if (python_class == NULL) {

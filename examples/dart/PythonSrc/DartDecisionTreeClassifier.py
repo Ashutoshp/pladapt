@@ -186,8 +186,8 @@ def main():
     classifier = None
     depth = 100
 
-    if (len(sys.argv) > 3):
-        depth = int(sys.argv[3])
+    #if (len(sys.argv) > 3):
+    #    depth = int(sys.argv[3])
     
     classifier = DartDecisionTreeClassifier(sys.argv[1], sys.argv[2], depth)
 
