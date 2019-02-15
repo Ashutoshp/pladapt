@@ -42,6 +42,7 @@ HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC
     if (mode == "pg") hpMode = HpMode::PG;
     else if (mode == "cb1") hpMode = HpMode::CB1;
     else if (mode == "cb2") hpMode = HpMode::CB2;
+    else if (mode == "cb3") hpMode = HpMode::CB3;
     else if (mode == "ml0") hpMode = HpMode::ML0;
     else if (mode == "ml1") hpMode = HpMode::ML1;
     else if (mode == "so") hpMode = HpMode::SLOWONLY;
@@ -49,7 +50,7 @@ HybridAdaptationManager::HybridAdaptationManager(const string& mode) : savedDTMC
     else assert(false);
 
     if (hpMode == HpMode::ML0 || hpMode == HpMode::ML1) {
-        ClassifyProblemInstance::getInstance("/home/ashutosp/dart/examples/dart/PythonSrc/consolidated-db.csv", "");
+        ClassifyProblemInstance::getInstance("/home/ashutosp/dart/pladapt/examples/dart/PythonSrc/consolidated-db.csv", "");
     }
 }
 
@@ -172,6 +173,7 @@ pladapt::TacticList HybridAdaptationManager::evaluate(const pladapt::Configurati
         if (hpMode == PG 
                 || (hpMode == HpMode::CB1 && destroyProbability >= 0.6)
                 || ((hpMode == HpMode::CB2) && (adjustedConfig.getAltitudeLevel() < dynamic_cast<const DartPMCHelper&>(*pMcHelper).threatRange))
+                || (hpMode == HpMode::CB3 && (destroyProbability >= 0.6 || detectionProbability <= 0.4))
                 || (hpMode == HpMode::ML0 && classifierLabel == 1.0)
                 || (hpMode == HpMode::ML1 && classifierLabel != 0.0)) {
             if (hpMode == HpMode::CB1 || hpMode == HpMode::CB2) {

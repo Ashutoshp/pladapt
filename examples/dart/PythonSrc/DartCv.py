@@ -1174,8 +1174,6 @@ def test_mode_2(data_file, test_seeds):
     y_resampled = train_problems.get_label_list()
 
     print("****** Default *******")
-    test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
-    return
     test_classifier(X_resampled, y_resampled, test_problems, "KNeighborsClassifier")
     #test_classifier(X_resampled, y_resampled, test_problems, "RadiusNeighborsClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "MLPClassifier")
@@ -1185,6 +1183,7 @@ def test_mode_2(data_file, test_seeds):
     test_classifier(X_resampled, y_resampled, test_problems, "ExtraTreesClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "AdaBoostClassifier")
     test_classifier(X_resampled, y_resampled, test_problems, "GradientBoostingClassifier")
+    test_classifier(X_resampled, y_resampled, test_problems, "BaggingClassifier")
 
     return
     features_list = StandardScaler().fit_transform(train_problems.get_features_list())

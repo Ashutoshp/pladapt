@@ -9,7 +9,7 @@ from DartDBWrapper import DBWrapper
 from sklearn.ensemble import ExtraTreesClassifier
 
 class ETClassifier:
-    __slots__ = ['__data_file', '__skip_trace', '__db', '__clf', '__compare_past_workload_for_similarity']
+    __slots__ = ['__data_file', '__skip_seeds', '__skip_trace', '__db', '__clf', '__compare_past_workload_for_similarity']
     
     def __init__(self, data_file, skip_seeds, estimators_count = 85):
         print("Ignoring Trace while training = ", skip_seeds)
@@ -23,7 +23,7 @@ class ETClassifier:
                     466, 211, 473, 219, 220, 477, 224, 484, 357, 356, 103, 360, \
                     105, 361, 493, 494, 251, 240, 623, 242, 372, 505, 506, \
                     635, 253, 638, 639]
-        self.__db = DBWrapper(data_file, skip_seeds)
+        self.__db = DBWrapper(data_file)
         self.__clf = ExtraTreesClassifier(n_estimators=estimators_count)
         
     def train(self):

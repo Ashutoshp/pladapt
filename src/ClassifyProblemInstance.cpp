@@ -45,7 +45,7 @@ ClassifyProblemInstance::~ClassifyProblemInstance() {
 
 void ClassifyProblemInstance::create_classifier(string problem_db_file, string source_file) {
     PyObject *module, *dict, *python_class;
-    const char* classifierScript = "DartDecisionTreeClassifier";
+    const char* classifierScript = "DartETClassifier";
 
     char* pPath = getenv( "PYTHONPATH" );
 
@@ -98,7 +98,7 @@ void ClassifyProblemInstance::create_classifier(string problem_db_file, string s
         Py_DECREF(module);
 
         // Builds the name of a callable class
-        python_class = PyDict_GetItemString(dict, "DartDecisionTreeClassifier");
+        python_class = PyDict_GetItemString(dict, "ETClassifier");
         //printf("7\n");
 
         if (python_class == NULL) {
@@ -118,7 +118,7 @@ void ClassifyProblemInstance::create_classifier(string problem_db_file, string s
             PyObject *args;
 
             //long int estimatorsCount =  85;
-            long int depth =  100;
+            long int depth =  85;
             args = Py_BuildValue("ssi", problem_db_file.c_str(), source_file.c_str(), depth);
             mClassifierObject = PyObject_CallObject(python_class, args);
             //string file_name = DebugFileInfo::getInstance()->GetDebugFilePath();

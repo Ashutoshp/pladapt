@@ -21,6 +21,7 @@ DebugFileInfo::DebugFileInfo(const int seed, const string& parentDirectory, cons
     if (mode == "pg") mMode = "ProbGeneration";
     else if (mode == "cb1") mMode = "Hybrid_CB1";
     else if (mode == "cb2") mMode = "Hybrid_CB2";
+    else if (mode == "cb3") mMode = "Hybrid_CB3";
     else if (mode == "ml0") mMode = "Hybrid_IBL0";
     else if (mode == "ml1") mMode = "Hybrid_IBL1";
     else if (mode == "so") mMode = "Slow";

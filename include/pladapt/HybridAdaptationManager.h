@@ -70,6 +70,7 @@ typedef enum {
 PG,
 CB1,
 CB2,
+CB3,
 ML0,
 ML1,
 SLOWONLY,
